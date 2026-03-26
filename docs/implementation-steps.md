@@ -482,8 +482,9 @@ In `main.py` einbinden: `app.include_router(import_router, prefix="/api/import")
 
 ---
 
-### S11 – PDF Service: PDF → Base64-Bild
+### S11 – PDF Service: PDF → Base64-Bild ✅
 
+**Status:** Implementiert (2026-03-26)
 **Datei:** `backend/app/services/pdf_service.py`
 
 ```python
