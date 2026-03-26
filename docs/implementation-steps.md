@@ -779,9 +779,10 @@ Aufruf in `processing_service` nach dem Speichern jedes `LabResult` und erneut i
 
 ---
 
-### S18 – Labs Router: GET-Endpunkte + PDF
+### S18 – Labs Router: GET-Endpunkte + PDF ✅
 
-**Datei:** `backend/app/api/labs_router.py`
+**Status:** Implementiert (2026-03-26)
+**Dateien:** `backend/app/api/labs_router.py`, `backend/app/main.py` (Router eingebunden)
 
 ```python
 from fastapi import APIRouter, Depends, Query

@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api import import_router
+from app.api import import_router, labs_router
 from app.core.database import SessionLocal
 from app.core.seed import run_seed
 
@@ -16,6 +16,7 @@ app.add_middleware(
 
 
 app.include_router(import_router.router, prefix="/api/import")
+app.include_router(labs_router.router, prefix="/api/labs")
 
 
 @app.on_event("startup")
