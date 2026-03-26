@@ -14,7 +14,7 @@ Verwaltet einen Massenimport-Vorgang.
 | total_count | INT | Anzahl gefundener PDFs |
 | processed_count | INT | |
 | failed_count | INT | |
-| status | TEXT | queued / processing / done / partial_failure |
+| status | TEXT | processing / done / partial_failure (startet direkt mit `processing`) |
 
 ---
 
@@ -45,7 +45,8 @@ Ein Befund = ein PDF.
 | processing_status | TEXT | queued / processing / pending_review / approved / rejected / failed |
 | approved_at | DATETIME | |
 | approved_by | TEXT | |
-| raw_text | TEXT | optional, Fallback |
+| raw_text | TEXT | optional, Fallback (im PoC nicht aktiv befüllt) |
+| error_message | TEXT | Fehlermeldung wenn processing_status = 'failed' |
 
 **Status-Werte:**
 - `queued` – im Batch, noch nicht verarbeitet
@@ -79,7 +80,7 @@ Ein Eintrag pro Laborparameter pro Befund.
 | corrected_by | TEXT | |
 | corrected_at | DATETIME | |
 | display_order | INT | |
-| category | TEXT | Klinische Chemie / Hämatologie / … |
+| category | TEXT | siehe Kategorien-Tabelle unten |
 
 ---
 
@@ -96,8 +97,19 @@ Synonym-Tabelle: Alias → kanonischer Name.
 
 ---
 
+### Kategorien für `lab_results.category`
+
+| Kategorie | Status | Beispiele |
+|---|---|---|
+| `Klinische Chemie` | implementiert | GOT, GPT, GGT, CK gesamt, Creatinin, Glucose, … |
+| `Hämatologie` | implementiert | Leukozyten, Erythrozyten, Hämoglobin, Thrombozyten, … |
+| `Gerinnung` | zukünftig | INR, Quick, PTT |
+| `Akutbestimmungen` | zukünftig | Laktat, Troponin, BNP |
+
+---
+
 ### extraction_runs
-Protokoll jeder KI-Extraktion (für Nachvollziehbarkeit).
+Protokoll jeder KI-Extraktion für Audit-Logging und Debugging. Wird im PoC befüllt, aber noch nicht über die API exponiert. Reserviert für spätere Audit-Trail-Ansicht.
 
 | Feld | Typ |
 |---|---|
@@ -127,11 +139,11 @@ Protokoll jeder KI-Extraktion (für Nachvollziehbarkeit).
     {
       "original_name": "",
       "canonical_name": "",
-      "value": 0.0,
+      "value": 0.0,              // → DB-Feld: value_numeric
       "unit": "",
-      "reference_range_text": "",
-      "reference_min": null,
-      "reference_max": null,
+      "reference_range_text": "", // → DB-Feld: ref_text
+      "reference_min": null,      // → DB-Feld: ref_min
+      "reference_max": null,      // → DB-Feld: ref_max
       "confidence": "high"
     }
   ]

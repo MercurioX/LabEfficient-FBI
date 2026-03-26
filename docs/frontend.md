@@ -10,7 +10,7 @@
 
 - Eingabe / Auswahl des Import-Ordners
 - Button „Import starten"
-- Fortschrittsanzeige je PDF (queued / processing / pending_review / failed)
+- Fortschrittsanzeige je PDF (queued / processing / pending_review / approved / rejected / failed)
 - Link zu fehlerhaften PDFs
 - Weiterleitung zur Review-Queue nach Abschluss
 
@@ -57,7 +57,7 @@
 - Kanonischer Name (Korrektur des Mappings)
 
 **Visuelle Hinweise:**
-- Unsichere Felder (low confidence) farblich hervorgehoben
+- Unsichere Felder (`confidence: low`) mit **gelbem Hintergrund** (`warning.light`) hervorgehoben
 - Geänderte Felder werden als „korrigiert" markiert
 
 ---
@@ -98,3 +98,15 @@ Nur Befunde mit Status `approved` sind hier sichtbar.
 - Auswahl eines Parameters
 - Liniendiagramm über mehrere freigegebene Befunde (Recharts)
 - **Priorität 3** – nice-to-have für Demo
+
+---
+
+### 6. Patientensuche & Patientenansicht
+
+**Zweck:** Einen Patienten suchen und alle freigegebenen Befunde der Person einsehen.
+
+- Suche über `GET /api/patients/search?q=...` (Name + Geburtsdatum)
+- Trefferliste → Klick öffnet Patientenansicht
+- Patientenansicht listet alle `approved` Labs des Patienten (via `GET /api/patients/{id}/labs`)
+- Klick auf Befund öffnet Befunddetail (Seite 4)
+- **Priorität 2** – für Demo relevant (implementiert in S31)

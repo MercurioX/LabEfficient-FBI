@@ -13,15 +13,15 @@
 - **FastAPI** + Uvicorn
 - **Pydantic** für Validierung
 - **SQLAlchemy** + Alembic für Datenbankzugriff
-- **pdfplumber / PyMuPDF** für PDF-Extraktion
-- **Azure OpenAI / Azure AI Vision** für OCR + strukturierte Extraktion
+- **PyMuPDF / pdf2image** für PDF-zu-Bild-Konvertierung (kein Textextrakt, Bilder gehen direkt an Azure)
+- **Azure OpenAI (GPT-4o Vision)** für strukturierte Extraktion via Bildanalyse
 
 ### Datenbank
 - **SQLite** – lokal lauffähig für PoC, einfache Persistenz
 
 ### Cloud / KI
-- **Azure OpenAI** für strukturierte Extraktion und Normalisierung
-- optional: **Azure Document Intelligence** für schwierige Scans
+- **Azure OpenAI (GPT-4o Vision)** als primäre Extraktionsmethode: PDF-Bild → strukturiertes JSON
+- optional: **Azure Document Intelligence** als Fallback für sehr schlechte Scanqualität
 
 ### DevOps
 - **Docker** + **Docker Compose**

@@ -3,16 +3,16 @@
 ## Abhängigkeitsbaum
 
 ```
-S01 → S02 → S03 → S04 → S05 → S06 → S07 → S08   (Setup + DB)
-                                      ↓
-                              S09 → S10            (Import)
-                                      ↓
-                              S11 → S12 → S13 → S14 → S15   (Extraktion)
-                                                       ↓
-                                               S16 → S17     (Mapping + Logik)
-                                                       ↓
-                                               S18 → S19     (Labs API)
-                                                       ↓
+S01 → S02 → S03 → S04 → S05 → S06 → S06b → S07 → S08   (Setup + DB)
+                                              ↓
+                                      S09 → S10            (Import)
+                                              ↓
+                                      S11 → S12 → S13 → S14 → S15   (Extraktion)
+                                                                ↓
+                                                        S16 → S17     (Mapping + Logik)
+                                                                ↓
+                                                        S18 → S19     (Labs API)
+                                                                ↓
 S20 → S21 → S22 → S23 → S24 → S25 → S26 → S27 → S28 → S29 → S30
       (Frontend – kann ab S10 parallel starten, sobald Mock-API definiert)
 ```
@@ -53,7 +53,23 @@ INBOX_FOLDER=/app/data/inbox
 DATABASE_URL=sqlite:////app/data/labefficient.db
 ```
 
-**Prüfung:** `docker compose build` läuft ohne Fehler durch.
+```dockerfile
+# backend/Dockerfile – Startup-Script für automatische Migration
+COPY entrypoint.sh /app/entrypoint.sh
+RUN chmod +x /app/entrypoint.sh
+ENTRYPOINT ["/app/entrypoint.sh"]
+```
+
+```bash
+#!/bin/bash
+# backend/entrypoint.sh
+set -e
+cd /app
+alembic upgrade head
+python -m uvicorn app.main:app --host 0.0.0.0 --port 8000
+```
+
+**Prüfung:** `docker compose build` läuft ohne Fehler durch. `docker compose up` → Migration läuft automatisch beim Backend-Start.
 
 ---
 
@@ -145,7 +161,7 @@ class ImportBatch(Base):
     total_count = Column(Integer, default=0)
     processed_count = Column(Integer, default=0)
     failed_count = Column(Integer, default=0)
-    status = Column(String, default="queued")
+    status = Column(String, default="processing")  # startet direkt mit "processing"
     labs = relationship("Lab", back_populates="batch")
 ```
 
@@ -183,6 +199,7 @@ class Lab(Base):
     approved_at = Column(DateTime, nullable=True)
     approved_by = Column(String, nullable=True)
     upload_timestamp = Column(DateTime, default=datetime.utcnow)
+    error_message = Column(String, nullable=True)  # befüllt wenn status='failed'
     batch = relationship("ImportBatch", back_populates="labs")
     patient = relationship("Patient", back_populates="labs")
     results = relationship("LabResult", back_populates="lab", cascade="all, delete-orphan")
@@ -250,6 +267,28 @@ class ExtractionRun(Base):
 
 ---
 
+### S06b – Models `__init__.py` (Alembic-Voraussetzung)
+
+**Datei:** `backend/app/models/__init__.py`
+
+```python
+# Alle Modelle importieren, damit Alembic Base.metadata vollständig kennt
+from app.models.import_batch import ImportBatch
+from app.models.patient import Patient
+from app.models.lab import Lab
+from app.models.lab_result import LabResult
+from app.models.parameter_mapping import ParameterMapping
+from app.models.extraction_run import ExtractionRun
+
+__all__ = ["ImportBatch", "Patient", "Lab", "LabResult", "ParameterMapping", "ExtractionRun"]
+```
+
+**Wichtig:** Ohne diese Imports generiert `alembic revision --autogenerate` keine Tabellen, weil `Base.metadata` leer bleibt.
+
+**Prüfung:** `python -c "from app.models import *; print('OK')"` → `OK`
+
+---
+
 ### S07 – Alembic Migration
 
 **Dateien:** `backend/alembic/`, `backend/alembic/env.py`
@@ -280,40 +319,62 @@ alembic upgrade head
 
 ```python
 MAPPINGS = [
-    # alias, canonical_name, category
-    ("CK",              "CK gesamt",           "Klinische Chemie"),
-    ("CPK",             "CK gesamt",           "Klinische Chemie"),
-    ("Kreatinkinase",   "CK gesamt",           "Klinische Chemie"),
-    ("AST",             "GOT",                 "Klinische Chemie"),
-    ("ASAT",            "GOT",                 "Klinische Chemie"),
-    ("ALT",             "GPT",                 "Klinische Chemie"),
-    ("ALAT",            "GPT",                 "Klinische Chemie"),
-    ("Gamma-GT",        "GGT",                 "Klinische Chemie"),
-    ("γ-GT",            "GGT",                 "Klinische Chemie"),
-    ("Bilirubin gesamt","Gesamt-Bilirubin",    "Klinische Chemie"),
-    ("BILG",            "Gesamt-Bilirubin",    "Klinische Chemie"),
-    ("Glukose",         "Glucose",             "Klinische Chemie"),
-    ("Blutzucker",      "Glucose",             "Klinische Chemie"),
-    ("Crea",            "Creatinin",           "Klinische Chemie"),
-    ("Kreatinin",       "Creatinin",           "Klinische Chemie"),
-    ("CRP",             "C-reaktives Protein", "Klinische Chemie"),
-    ("WBC",             "Leukozyten",          "Hämatologie"),
-    ("RBC",             "Erythrozyten",        "Hämatologie"),
-    ("Hb",              "Hämoglobin",          "Hämatologie"),
-    ("Hkt",             "Hämatokrit",          "Hämatologie"),
-    ("Thrombos",        "Thrombozyten",        "Hämatologie"),
+    # alias, canonical_name, category, default_unit
+    ("CK",              "CK gesamt",           "Klinische Chemie", "U/l"),
+    ("CPK",             "CK gesamt",           "Klinische Chemie", "U/l"),
+    ("Kreatinkinase",   "CK gesamt",           "Klinische Chemie", "U/l"),
+    ("AST",             "GOT",                 "Klinische Chemie", "U/l"),
+    ("ASAT",            "GOT",                 "Klinische Chemie", "U/l"),
+    ("ALT",             "GPT",                 "Klinische Chemie", "U/l"),
+    ("ALAT",            "GPT",                 "Klinische Chemie", "U/l"),
+    ("Gamma-GT",        "GGT",                 "Klinische Chemie", "U/l"),
+    ("γ-GT",            "GGT",                 "Klinische Chemie", "U/l"),
+    ("Bilirubin gesamt","Gesamt-Bilirubin",    "Klinische Chemie", "mg/dl"),
+    ("BILG",            "Gesamt-Bilirubin",    "Klinische Chemie", "mg/dl"),
+    ("Glukose",         "Glucose",             "Klinische Chemie", "mg/dl"),
+    ("Blutzucker",      "Glucose",             "Klinische Chemie", "mg/dl"),
+    ("Crea",            "Creatinin",           "Klinische Chemie", "mg/dl"),
+    ("Kreatinin",       "Creatinin",           "Klinische Chemie", "mg/dl"),
+    ("CRP",             "C-reaktives Protein", "Klinische Chemie", "mg/l"),
+    ("WBC",             "Leukozyten",          "Hämatologie",      "/nl"),
+    ("RBC",             "Erythrozyten",        "Hämatologie",      "T/l"),
+    ("Hb",              "Hämoglobin",          "Hämatologie",      "g/dl"),
+    ("Hkt",             "Hämatokrit",          "Hämatologie",      "%"),
+    ("Thrombos",        "Thrombozyten",        "Hämatologie",      "/nl"),
+    # Kanonische Namen als Selbst-Mapping (damit Lookup auch bei korrekter Bezeichnung trifft)
+    ("Natrium",              "Natrium",              "Klinische Chemie", "mmol/l"),
+    ("Kalium",               "Kalium",               "Klinische Chemie", "mmol/l"),
+    ("Glucose",              "Glucose",              "Klinische Chemie", "mg/dl"),
+    ("Creatinin",            "Creatinin",            "Klinische Chemie", "mg/dl"),
+    ("Gesamt-Bilirubin",     "Gesamt-Bilirubin",     "Klinische Chemie", "mg/dl"),
+    ("GOT",                  "GOT",                  "Klinische Chemie", "U/l"),
+    ("GPT",                  "GPT",                  "Klinische Chemie", "U/l"),
+    ("GGT",                  "GGT",                  "Klinische Chemie", "U/l"),
+    ("CK gesamt",            "CK gesamt",            "Klinische Chemie", "U/l"),
+    ("Amylase",              "Amylase",              "Klinische Chemie", "U/l"),
+    ("Lipase",               "Lipase",               "Klinische Chemie", "U/l"),
+    ("C-reaktives Protein",  "C-reaktives Protein",  "Klinische Chemie", "mg/l"),
+    ("Leukozyten",           "Leukozyten",           "Hämatologie",      "/nl"),
+    ("Erythrozyten",         "Erythrozyten",         "Hämatologie",      "T/l"),
+    ("Hämoglobin",           "Hämoglobin",           "Hämatologie",      "g/dl"),
+    ("Hämatokrit",           "Hämatokrit",           "Hämatologie",      "%"),
+    ("MCV",                  "MCV",                  "Hämatologie",      "fl"),
+    ("MCH",                  "MCH",                  "Hämatologie",      "pg"),
+    ("MCHC",                 "MCHC",                 "Hämatologie",      "g/dl"),
+    ("Thrombozyten",         "Thrombozyten",         "Hämatologie",      "/nl"),
 ]
 
 def run_seed(db):
-    for alias, canonical, category in MAPPINGS:
+    for alias, canonical, category, default_unit in MAPPINGS:
         if not db.query(ParameterMapping).filter_by(alias=alias).first():
-            db.add(ParameterMapping(alias=alias, canonical_name=canonical, category=category))
+            db.add(ParameterMapping(alias=alias, canonical_name=canonical,
+                                    category=category, default_unit=default_unit))
     db.commit()
 ```
 
 Seed beim App-Start aufrufen: in `main.py` → `@app.on_event("startup")`.
 
-**Prüfung:** `SELECT count(*) FROM parameter_mappings;` → 21 Einträge.
+**Prüfung:** `SELECT count(*) FROM parameter_mappings;` → 42 Einträge (21 Aliases + 21 Selbst-Mappings).
 
 ---
 
@@ -377,6 +438,13 @@ def start_import(req: ImportStartRequest, background_tasks: BackgroundTasks,
     batch = import_service.scan_and_create_batch(db, req.folder_path)
     background_tasks.add_task(import_service.process_batch, batch.id)
     return {"batch_id": batch.id, "pdf_count": batch.total_count, "status": "processing"}
+
+@router.get("/batches")
+def list_batches(db: Session = Depends(get_db)):
+    batches = db.query(ImportBatch).order_by(ImportBatch.started_at.desc()).all()
+    return [{"batch_id": b.id, "status": b.status, "total": b.total_count,
+             "processed": b.processed_count, "failed": b.failed_count,
+             "started_at": b.started_at, "finished_at": b.finished_at} for b in batches]
 
 @router.get("/batches/{batch_id}")
 def get_batch(batch_id: int, db: Session = Depends(get_db)):
@@ -528,7 +596,7 @@ def process_lab(db, lab_id: int) -> None:
             raw_response_json=extraction.model_dump_json(),
         ))
 
-        # Patient anlegen / matchen (einfach: immer neu anlegen für PoC)
+        # Patient anlegen / matchen
         patient = _upsert_patient(db, extraction.patient)
         lab.patient_id = patient.id
         lab.external_lab_name = extraction.patient.external_lab_name
@@ -552,9 +620,31 @@ def process_lab(db, lab_id: int) -> None:
 
     except Exception as exc:
         lab.processing_status = "failed"
-        # Fehler loggen ohne den Batch zu stoppen
+        lab.error_message = str(exc)[:500]  # Fehlermeldung speichern, gekürzt
 
     db.commit()
+```
+
+```python
+# Hilfsfunktionen im selben Modul
+
+def _parse_date(date_str: str | None):
+    if not date_str: return None
+    try: return date.fromisoformat(date_str)
+    except ValueError: return None
+
+def _upsert_patient(db, p: PatientData) -> Patient:
+    """Sucht Patient nach Name + Geburtsdatum; legt neu an wenn nicht gefunden."""
+    birth = _parse_date(p.birth_date)
+    existing = db.query(Patient).filter_by(
+        first_name=p.first_name, last_name=p.last_name, birth_date=birth
+    ).first()
+    if existing:
+        return existing
+    patient = Patient(first_name=p.first_name, last_name=p.last_name, birth_date=birth)
+    db.add(patient)
+    db.flush()
+    return patient
 ```
 
 **Prüfung:** `process_lab(db, lab_id)` aufrufen → `lab.processing_status == "pending_review"`, `lab_results`-Einträge in DB.
@@ -712,6 +802,65 @@ def get_timeline(lab_id: int, db: Session = Depends(get_db)):
     return _build_timeline(sibling_labs)
 ```
 
+```python
+# Hilfsfunktionen im selben Modul
+
+def _lab_summary(lab: Lab) -> dict:
+    return {
+        "id": lab.id,
+        "upload_filename": lab.upload_filename,
+        "status": lab.processing_status,   # DB-Feld → API-Feld
+        "sample_date": lab.sample_date.isoformat() if lab.sample_date else None,
+        "external_lab_name": lab.external_lab_name,
+        "error_message": lab.error_message,
+        "patient": {
+            "id": lab.patient.id,
+            "first_name": lab.patient.first_name,
+            "last_name": lab.patient.last_name,
+            "birth_date": lab.patient.birth_date.isoformat() if lab.patient.birth_date else None,
+        } if lab.patient else None,
+    }
+
+def _lab_detail(lab: Lab) -> dict:
+    base = _lab_summary(lab)
+    base["approved_by"] = lab.approved_by
+    base["approved_at"] = lab.approved_at.isoformat() if lab.approved_at else None
+    base["results"] = [{
+        "id": r.id,
+        "canonical_name": r.canonical_name,
+        "original_name": r.original_name,
+        "value_numeric": r.value_numeric,
+        "unit": r.unit,
+        "ref_min": r.ref_min,
+        "ref_max": r.ref_max,
+        "ref_text": r.ref_text,
+        "is_high": r.is_high,
+        "is_low": r.is_low,
+        "is_out_of_range": r.is_out_of_range,
+        "confidence": r.confidence,
+        "is_corrected": r.is_corrected,
+        "corrected_by": r.corrected_by,
+        "corrected_at": r.corrected_at.isoformat() if r.corrected_at else None,
+        "category": r.category,
+        "display_order": r.display_order,
+    } for r in sorted(lab.results, key=lambda r: r.display_order or 999)]
+    return base
+
+def _build_timeline(labs: list[Lab]) -> list[dict]:
+    rows = []
+    for lab in labs:
+        for r in lab.results:
+            rows.append({
+                "sample_date": lab.sample_date.isoformat() if lab.sample_date else None,
+                "canonical_name": r.canonical_name,
+                "value_numeric": r.value_numeric,
+                "unit": r.unit,
+                "ref_min": r.ref_min,
+                "ref_max": r.ref_max,
+            })
+    return rows
+```
+
 **Prüfung:** `GET /api/labs?status=pending_review` → Liste der wartenden Befunde.
 
 ---
@@ -726,6 +875,7 @@ class ResultPatch(BaseModel):
     unit: str | None = None
     ref_min: float | None = None
     ref_max: float | None = None
+    ref_text: str | None = None
     canonical_name: str | None = None
     corrected_by: str = "user"
 
@@ -741,13 +891,17 @@ def update_result(lab_id: int, result_id: int, patch: ResultPatch,
     db.commit()
     return {"id": result.id, "is_corrected": True}
 
+class ApproveRequest(BaseModel):
+    approved_by: str = "unknown"
+
 @router.post("/{lab_id}/approve")
-def approve(lab_id: int, db: Session = Depends(get_db)):
+def approve(lab_id: int, req: ApproveRequest, db: Session = Depends(get_db)):
     lab = db.get(Lab, lab_id)
     lab.processing_status = "approved"
     lab.approved_at = datetime.utcnow()
+    lab.approved_by = req.approved_by
     db.commit()
-    return {"lab_id": lab_id, "status": "approved"}
+    return {"lab_id": lab_id, "status": "approved", "approved_by": req.approved_by}
 
 @router.post("/{lab_id}/reject")
 def reject(lab_id: int, db: Session = Depends(get_db)):
@@ -755,11 +909,19 @@ def reject(lab_id: int, db: Session = Depends(get_db)):
     lab.processing_status = "rejected"
     db.commit()
     return {"lab_id": lab_id, "status": "rejected"}
+
+@router.post("/{lab_id}/process")
+def process_single(lab_id: int, background_tasks: BackgroundTasks,
+                   db: Session = Depends(get_db)):
+    """Startet Azure Vision Extraktion für ein einzelnes Lab (z.B. nach Fehler erneut anstoßen)."""
+    background_tasks.add_task(processing_service.process_lab, db, lab_id)
+    return {"lab_id": lab_id, "status": "processing"}
 ```
 
 **Prüfung:**
 - Wert patchen → `is_corrected=True`, `is_high`/`is_low` korrekt neu gesetzt
-- Approve → `GET /api/labs/{id}` liefert `status: approved`
+- Approve → `GET /api/labs/{id}` liefert `status: approved`, `approved_by` gesetzt
+- `/process` auf fehlgeschlagenem Lab → erneute Verarbeitung startet
 
 ---
 
@@ -818,8 +980,11 @@ export interface LabResult {
   ref_text: string | null
   is_high: boolean
   is_low: boolean
+  is_out_of_range: boolean
   confidence: 'high' | 'low'
   is_corrected: boolean
+  corrected_by: string | null
+  corrected_at: string | null
   category: string | null
   display_order: number | null
 }
@@ -827,10 +992,12 @@ export interface LabResult {
 export interface Lab {
   id: number
   upload_filename: string
-  processing_status: string
+  status: string              // API gibt processing_status als "status" zurück
   sample_date: string | null
   external_lab_name: string | null
-  patient: { first_name: string; last_name: string; birth_date: string } | null
+  error_message: string | null
+  approved_by: string | null
+  patient: { id: number; first_name: string; last_name: string; birth_date: string } | null
   results: LabResult[]
 }
 ```
@@ -907,6 +1074,11 @@ export function BatchStatus({ batchId }: { batchId: number }) {
 
   return (
     <Box mt={2}>
+      {batch.status === 'partial_failure' && (
+        <Alert severity="warning" sx={{ mb: 1 }}>
+          Import abgeschlossen mit {batch.failed} Fehlern. Fehlerhafte Befunde sind unten markiert.
+        </Alert>
+      )}
       <LinearProgress variant="determinate"
         value={(batch.processed / batch.total) * 100} />
       <Typography>{batch.processed} / {batch.total} verarbeitet
@@ -1212,3 +1384,43 @@ DevOps:
 ```
 
 **Prüfung:** Frischer `git clone` → `docker compose up` → kompletter Demo-Durchlauf funktioniert.
+
+---
+
+### S31 – Patienten-Router: Suche + Labs je Patient
+
+**Datei:** `backend/app/api/patients_router.py`
+
+```python
+from fastapi import APIRouter, Depends, Query
+from sqlalchemy import or_, func
+from app.core.database import get_db
+from app.models import Patient, Lab
+
+router = APIRouter()
+
+@router.get("/search")
+def search_patients(q: str = Query(..., min_length=2), db: Session = Depends(get_db)):
+    q_lower = q.strip().lower()
+    patients = db.query(Patient).filter(
+        or_(
+            func.lower(Patient.first_name).like(f"%{q_lower}%"),
+            func.lower(Patient.last_name).like(f"%{q_lower}%"),
+        )
+    ).all()
+    return [{"id": p.id, "first_name": p.first_name,
+             "last_name": p.last_name, "birth_date": p.birth_date} for p in patients]
+
+@router.get("/{patient_id}/labs")
+def get_patient_labs(patient_id: int, db: Session = Depends(get_db)):
+    labs = db.query(Lab).filter_by(
+        patient_id=patient_id, processing_status="approved"
+    ).order_by(Lab.sample_date.desc()).all()
+    return [_lab_summary(l) for l in labs]
+```
+
+In `main.py` einbinden: `app.include_router(patients_router, prefix="/api/patients")`.
+
+**Prüfung:**
+- `GET /api/patients/search?q=mueller` → Patienten mit "mueller" im Namen
+- `GET /api/patients/42/labs` → alle freigegebenen Labs von Patient 42
