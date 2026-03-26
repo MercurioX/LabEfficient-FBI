@@ -1466,3 +1466,150 @@ In `main.py` einbinden: `app.include_router(patients_router, prefix="/api/patien
 **Prüfung:**
 - `GET /api/patients/search?q=mueller` → Patienten mit "mueller" im Namen
 - `GET /api/patients/42/labs` → alle freigegebenen Labs von Patient 42
+
+---
+
+### S32 – Patientensuche: Frontend
+
+**Dateien:**
+- `frontend/src/types/index.ts` — `PatientSummary`-Interface ergänzen
+- `frontend/src/api/hooks.ts` — zwei neue Hooks: `usePatientSearch`, `usePatientLabs`
+- `frontend/src/pages/PatientSearchPage.tsx` — Suchseite
+- `frontend/src/main.tsx` — Route `/patienten` registrieren
+
+#### types/index.ts – neues Interface
+
+```typescript
+export interface PatientSummary {
+  id: number
+  first_name: string
+  last_name: string
+  birth_date: string | null
+}
+
+export interface PatientLabSummary {
+  id: number
+  upload_filename: string
+  status: string
+  sample_date: string | null
+  external_lab_name: string | null
+}
+```
+
+#### hooks.ts – neue Hooks
+
+```typescript
+export const usePatientSearch = (q: string) =>
+  useQuery<PatientSummary[]>({
+    queryKey: ['patients', q],
+    enabled: q.trim().length >= 2,
+    queryFn: () => api.get('/api/patients/search', { params: { q } }).then(r => r.data),
+  })
+
+export const usePatientLabs = (patientId: number | null) =>
+  useQuery<PatientLabSummary[]>({
+    queryKey: ['patientLabs', patientId],
+    enabled: patientId !== null,
+    queryFn: () => api.get(`/api/patients/${patientId}/labs`).then(r => r.data),
+  })
+```
+
+#### PatientSearchPage.tsx
+
+```typescript
+export function PatientSearchPage() {
+  const [q, setQ] = useState('')
+  const [selectedId, setSelectedId] = useState<number | null>(null)
+  const navigate = useNavigate()
+
+  const { data: patients = [], isFetching } = usePatientSearch(q)
+  const { data: labs = [] } = usePatientLabs(selectedId)
+
+  return (
+    <Box p={3}>
+      <Typography variant="h5">Patientensuche</Typography>
+
+      {/* Suchfeld */}
+      <TextField
+        label="Name suchen"
+        value={q}
+        onChange={e => { setQ(e.target.value); setSelectedId(null) }}
+        fullWidth
+        sx={{ my: 2 }}
+        InputProps={{ endAdornment: isFetching ? <CircularProgress size={20} /> : null }}
+      />
+
+      {/* Trefferliste */}
+      {patients.length > 0 && (
+        <List dense>
+          {patients.map(p => (
+            <ListItemButton
+              key={p.id}
+              selected={selectedId === p.id}
+              onClick={() => setSelectedId(p.id)}
+            >
+              <ListItemText
+                primary={`${p.last_name}, ${p.first_name}`}
+                secondary={p.birth_date ? `geb. ${p.birth_date}` : undefined}
+              />
+            </ListItemButton>
+          ))}
+        </List>
+      )}
+      {q.trim().length >= 2 && !isFetching && patients.length === 0 && (
+        <Typography color="text.secondary">Keine Patienten gefunden.</Typography>
+      )}
+
+      {/* Labs des gewählten Patienten */}
+      {selectedId && (
+        <Box mt={3}>
+          <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
+            Freigegebene Befunde
+          </Typography>
+          {labs.length === 0 ? (
+            <Typography color="text.secondary">Keine freigegebenen Befunde.</Typography>
+          ) : (
+            <TableContainer component={Paper}>
+              <Table size="small">
+                <TableHead>
+                  <TableRow>
+                    <TableCell>Datei</TableCell>
+                    <TableCell>Entnahmedatum</TableCell>
+                    <TableCell>Labor</TableCell>
+                    <TableCell />
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {labs.map(lab => (
+                    <TableRow key={lab.id}>
+                      <TableCell>{lab.upload_filename}</TableCell>
+                      <TableCell>{lab.sample_date ?? '–'}</TableCell>
+                      <TableCell>{lab.external_lab_name ?? '–'}</TableCell>
+                      <TableCell>
+                        <Button size="small" onClick={() => navigate(`/befunde/${lab.id}`)}>
+                          Öffnen
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          )}
+        </Box>
+      )}
+    </Box>
+  )
+}
+```
+
+#### main.tsx – Route ergänzen
+
+```typescript
+<Route path="/patienten" element={<PatientSearchPage />} />
+```
+
+**Prüfung:**
+- Suchfeld mit ≥ 2 Zeichen → Trefferliste erscheint (Live-Suche, kein Button)
+- Patient auswählen → seine freigegebenen Befunde darunter
+- „Öffnen" navigiert zu `/befunde/:labId`
