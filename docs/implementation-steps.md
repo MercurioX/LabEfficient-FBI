@@ -666,9 +666,10 @@ def _upsert_patient(db, p: PatientData) -> Patient:
 
 ---
 
-### S15 – Batch-Verarbeitung (Background Task)
+### S15 – Batch-Verarbeitung (Background Task) ✅
 
-**Datei:** `backend/app/services/import_service.py` (Ergänzung)
+**Status:** Implementiert (2026-03-26)
+**Datei:** `backend/app/services/import_service.py` (Stub ersetzt)
 
 ```python
 def process_batch(batch_id: int) -> None:

@@ -1,9 +1,12 @@
+from datetime import datetime
 from pathlib import Path
 
 from sqlalchemy.orm import Session
 
+from app.core.database import SessionLocal
 from app.models.import_batch import ImportBatch
 from app.models.lab import Lab
+from app.services import processing_service
 
 
 def scan_and_create_batch(db: Session, folder_path: str) -> ImportBatch:
@@ -31,5 +34,26 @@ def scan_and_create_batch(db: Session, folder_path: str) -> ImportBatch:
 
 
 def process_batch(batch_id: int) -> None:
-    """Stub – wird in S11–S15 implementiert (Azure Vision Extraktion)."""
-    pass
+    # Eigene DB-Session, da Background Task außerhalb des Request-Lifecycles
+    db = SessionLocal()
+    try:
+        labs = db.query(Lab).filter_by(
+            batch_id=batch_id,
+            processing_status="queued",
+        ).all()
+        batch = db.get(ImportBatch, batch_id)
+
+        for lab in labs:
+            processing_service.process_lab(db, lab.id)
+            db.refresh(lab)
+            if lab.processing_status == "failed":
+                batch.failed_count += 1
+            else:
+                batch.processed_count += 1
+            db.commit()
+
+        batch.status = "done" if batch.failed_count == 0 else "partial_failure"
+        batch.finished_at = datetime.utcnow()
+        db.commit()
+    finally:
+        db.close()
