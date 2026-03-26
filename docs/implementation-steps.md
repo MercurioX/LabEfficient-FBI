@@ -391,9 +391,10 @@ Seed beim App-Start aufrufen: in `main.py` → `@app.on_event("startup")`.
 
 ---
 
-### S09 – Import Service: Folder-Scan
+### S09 – Import Service: Folder-Scan ✅
 
-**Datei:** `backend/app/services/import_service.py`
+**Status:** Implementiert (2026-03-26)
+**Dateien:** `backend/app/services/__init__.py`, `backend/app/services/import_service.py`
 
 ```python
 from pathlib import Path
