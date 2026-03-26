@@ -13,6 +13,7 @@ Dieses Dokument dient als Einstiegspunkt. Die Details sind in thematische Dateie
 | [frontend.md](frontend.md) | Frontend-Seiten und UI-Konzept |
 | [logic.md](logic.md) | Normabweichungslogik |
 | [implementation-plan.md](implementation-plan.md) | Hackathon-Phasen, Definition of Done, Nächste Schritte |
+| [implementation-steps.md](implementation-steps.md) | **Schritt-für-Schritt Implementierungsanleitung** mit Code-Beispielen |
 
 ## Kurzübersicht
 
