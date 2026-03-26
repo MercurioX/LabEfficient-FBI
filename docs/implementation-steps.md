@@ -1427,7 +1427,9 @@ DevOps:
 
 ---
 
-### S31 – Patienten-Router: Suche + Labs je Patient
+### S31 – Patienten-Router: Suche + Labs je Patient ✅
+
+**Status:** Implementiert (2026-03-26)
 
 **Datei:** `backend/app/api/patients_router.py`
 
