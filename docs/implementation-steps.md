@@ -321,9 +321,10 @@ alembic upgrade head
 
 ---
 
-### S08 – Seed: parameter_mappings
+### S08 – Seed: parameter_mappings ✅
 
-**Datei:** `backend/app/core/seed.py`
+**Status:** Implementiert (2026-03-26)
+**Dateien:** `backend/app/core/seed.py`, `backend/app/main.py` (Startup-Hook ergänzt)
 
 ```python
 MAPPINGS = [
