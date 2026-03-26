@@ -117,8 +117,9 @@ def health(): return {"status": "ok"}
 
 ---
 
-### S03 – Datenbankverbindung & Base
+### S03 – Datenbankverbindung & Base ✅
 
+**Status:** Implementiert (2026-03-26)
 **Dateien:** `backend/app/core/database.py`, `backend/app/models/__init__.py`
 
 ```python
