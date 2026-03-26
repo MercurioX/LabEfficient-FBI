@@ -504,9 +504,10 @@ def pdf_to_base64_image(pdf_path: str, page_index: int = 0) -> str:
 
 ---
 
-### S12 – Extraction Pydantic Schema
+### S12 – Extraction Pydantic Schema ✅
 
-**Datei:** `backend/app/schemas/extraction.py`
+**Status:** Implementiert (2026-03-26)
+**Dateien:** `backend/app/schemas/__init__.py`, `backend/app/schemas/extraction.py`
 
 ```python
 from pydantic import BaseModel
