@@ -1044,9 +1044,11 @@ export const useBatch = (id: number | null) =>
 
 ---
 
-### S22 – Import-Seite: Eingabe + Start
+### S22 – Import-Seite: Eingabe + Start ✅
 
-**Datei:** `frontend/src/pages/ImportPage.tsx`
+**Status:** Implementiert (2026-03-26)
+
+**Dateien:** `frontend/src/pages/ImportPage.tsx`, `frontend/src/components/BatchStatus.tsx`
 
 ```typescript
 export function ImportPage() {
