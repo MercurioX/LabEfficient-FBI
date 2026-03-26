@@ -1,28 +1,33 @@
 # LabEfficient – KI-Pipeline
 
-## Verarbeitungsschritte
+## Primärer Ansatz: Azure Vision Model
 
-1. PDF entgegennehmen
-2. Text und Tabellen extrahieren (pdfplumber / PyMuPDF)
-3. Falls Scanqualität schlecht: OCR über Azure Document Intelligence
-4. LLM-Prompt mit Schema + Mapping-Hinweisen an Azure OpenAI
-5. Rückgabe als valides JSON
-6. Backend validiert JSON mit Pydantic
-7. Synonym-Mapping und Anordnung nach Template
-8. Referenzbereichsprüfung
-9. Speicherung in SQLite
-10. Anzeige im Frontend
+PDFs werden direkt als Bild an das Azure Vision Model geschickt. Das Modell erkennt Struktur, Text und Tabellen visuell – ohne vorherige Texterkennung mit pdfplumber/PyMuPDF.
+
+---
+
+## Verarbeitungsschritte pro PDF
+
+1. PDF aus dem Import-Ordner einlesen
+2. PDF-Seite(n) als Bild rendern (z.B. via PyMuPDF / pdf2image)
+3. Bild(er) an **Azure Vision Model** senden (GPT-4o Vision oder Azure Document Intelligence)
+4. Rückgabe als strukturiertes JSON (Patient + Laborwerte)
+5. Backend validiert JSON mit **Pydantic**
+6. **Synonym-Mapping** auf kanonische Parameternamen
+7. **Referenzbereichsprüfung** → `is_high`, `is_low`, `is_out_of_range`
+8. Speicherung in SQLite mit Status `pending_review`
+9. Bereitstellung für Split-View im Frontend
 
 ---
 
 ## Prompt-Strategie
 
 Der Prompt soll:
-- Kopfbereich extrahieren
+- Kopfbereich extrahieren (Patient, Datum, Labor)
 - Labortabelle lesen
 - Synonyme auf kanonische Namen abbilden
 - fehlende Werte nicht erfinden
-- unsichere Werte markieren
+- unsichere Werte markieren (`confidence: low`)
 - ausschließlich JSON zurückgeben
 
 ### System Prompt (Beispiel)
@@ -46,11 +51,21 @@ Thrombos -> Thrombozyten
 
 ---
 
+## Massenimport-Steuerung
+
+- Jeder Import wird als `ImportBatch` in der DB gespeichert
+- PDFs werden sequenziell oder parallel verarbeitet (konfigurierbar)
+- Status je PDF: `queued` → `processing` → `pending_review` / `failed`
+- Fehlerhafte PDFs landen in einem Fehler-Log, blockieren den Rest nicht
+
+---
+
 ## Risiken & Gegenmaßnahmen
 
 | Risiko | Gegenmaßnahme |
 |---|---|
-| Schlechte Scanqualität | OCR-Fallback, manuelle Rohtextansicht |
-| Halluzinationen des LLM | Striktes JSON-Schema, Backend-Validierung |
-| Uneinheitliche Referenzbereiche | Referenztext immer speichern, Min/Max nur wenn sicher parsebar |
-| Falsches Synonym-Mapping | Mapping-Tabelle versionieren und erweiterbar halten |
+| Schlechte Scan-/Bildqualität | Fehler-Status + manuelle Korrektur in Split-View |
+| Halluzinationen des LLM | Striktes JSON-Schema, Pydantic-Validierung, menschliche Freigabe |
+| Uneinheitliche Referenzbereiche | `ref_text` immer speichern, `ref_min`/`ref_max` nur wenn sicher parsebar |
+| Falsches Synonym-Mapping | Mapping-Tabelle in DB, versioniert und erweiterbar |
+| Massenimport schlägt teilweise fehl | Batch-Status pro PDF, Fehlerbericht nach Import |

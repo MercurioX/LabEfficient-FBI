@@ -7,6 +7,22 @@ Vollständige Dokumentation: [docs/bootstrap.md](docs/bootstrap.md)
 
 ---
 
+## Fachlicher Ablauf
+
+```
+Folder mit PDFs
+    → Massenimport starten
+    → Azure Vision Model (Bilderkennung: Patient + Laborwerte)
+    → Split-View: PDF links, extrahierte Werte rechts (editierbar)
+    → Manuelle Korrektur möglich
+    → Freigabe durch Anwender (approve / reject)
+    → Freigegebene Befunde in Befundansicht sichtbar
+```
+
+**Nur Befunde mit Status `approved` erscheinen in der klinischen Befundansicht.**
+
+---
+
 ## Tech-Stack
 
 ### Frontend (`frontend/`)
@@ -19,8 +35,8 @@ Vollständige Dokumentation: [docs/bootstrap.md](docs/bootstrap.md)
 - Python 3.11 + FastAPI + Uvicorn
 - ORM: SQLAlchemy + Alembic
 - Validation: Pydantic
-- PDF: pdfplumber oder PyMuPDF
-- KI: Azure OpenAI
+- PDF → Bild: PyMuPDF / pdf2image
+- KI: Azure Vision Model (GPT-4o Vision oder Azure Document Intelligence)
 
 ### Datenbank
 - SQLite (lokal, PoC-tauglich)
@@ -51,26 +67,26 @@ labefficient/
 │     ├─ repositories/
 │     └─ main.py
 ├─ data/
+│  └─ inbox/           ← Import-Ordner für PDFs
 ├─ docker-compose.yml
 └─ CLAUDE.md
 ```
 
 ---
 
-## Fachlicher Kontext
+## Domänenobjekte
 
-### Kernfluss
-1. PDF hochladen → Text/Tabellen extrahieren
-2. Azure OpenAI → strukturiertes JSON (Patient + Laborwerte)
-3. Synonym-Mapping (z.B. `CPK` → `CK gesamt`, `AST` → `GOT`)
-4. Referenzbereichsprüfung → Normabweichungen markieren
-5. Standardisierte Anzeige im Frontend
+| Objekt | Beschreibung |
+|---|---|
+| `ImportBatch` | Ein Massenimport-Vorgang (Folder-Scan) |
+| `Patient` | Nachname, Vorname, Geburtsdatum |
+| `Lab` | Befund = ein PDF (status: queued → pending_review → approved/rejected) |
+| `LabResult` | Einzelner Parameter (canonical_name, value, unit, ref_min, ref_max, is_high, is_low, is_corrected) |
+| `ParameterMapping` | Synonym-Tabelle: Alias → kanonischer Name |
+| `ExtractionRun` | Protokoll eines Azure Vision Calls |
 
-### Wichtige Domänenobjekte
-- **Patient:** Nachname, Vorname, Geburtsdatum
-- **Lab:** Befund pro Upload (externes Labor, Entnahmedatum)
-- **LabResult:** Einzelner Parameter (canonical_name, value, unit, ref_min, ref_max, is_high, is_low)
-- **ParameterMapping:** Alias → kanonischer Name (Synonym-Tabelle)
+### Lab-Status-Werte
+`queued` → `processing` → `pending_review` → `approved` / `rejected` / `failed`
 
 ### Kanonische Parameternamen (Auswahl)
 `Natrium`, `Kalium`, `Glucose`, `Creatinin`, `Gesamt-Bilirubin`, `GOT`, `GPT`, `GGT`,
@@ -79,33 +95,34 @@ labefficient/
 
 ---
 
-## API-Endpunkte
+## API-Endpunkte (Kurzübersicht)
 
 | Methode | Pfad | Beschreibung |
 |---|---|---|
-| POST | `/api/labs/upload` | PDF hochladen |
-| POST | `/api/labs/{lab_id}/process` | OCR + Extraktion starten |
-| GET | `/api/labs/{lab_id}` | Standardisierten Befund abrufen |
-| GET | `/api/labs/{lab_id}/timeline` | Verlaufsdaten je Parameter |
+| POST | `/api/import/start` | Massenimport starten |
+| GET | `/api/import/batches/{id}` | Batch-Status abrufen |
+| POST | `/api/labs/{id}/process` | Azure Vision Extraktion starten |
+| GET | `/api/labs/{id}` | Befund abrufen |
+| GET | `/api/labs/{id}/pdf` | Original-PDF liefern (Split-View) |
+| GET | `/api/labs?status=pending_review` | Review-Queue |
+| PATCH | `/api/labs/{id}/results/{rid}` | Laborwert korrigieren |
+| POST | `/api/labs/{id}/approve` | Befund freigeben |
+| POST | `/api/labs/{id}/reject` | Befund zurückweisen |
+| GET | `/api/labs?status=approved` | Freigegebene Befunde |
+| GET | `/api/labs/{id}/timeline` | Verlaufsdaten je Parameter |
 | GET | `/api/patients/search?q=` | Patientensuche |
-
----
-
-## Implementierungsprioritäten
-
-1. **Muss:** Upload, Extraktion, Synonym-Mapping, Normabweichungsmarkierung
-2. **Soll:** Verlaufsgrafik, unsichere Felder kennzeichnen, Patientensuche
-3. **Kann:** CTCAE-Klassifikation, PDF-Export, Review-Modus
 
 ---
 
 ## Wichtige Designentscheidungen
 
-- **Kein LLM-Halluzinieren:** Extraktionsprompt gibt ausschließlich JSON zurück, Backend validiert mit Pydantic
-- **Originalname immer speichern:** `original_name` bleibt neben `canonical_name` erhalten
-- **Referenzbereich robust:** `ref_text` immer befüllen, `ref_min`/`ref_max` nur wenn sicher parsebar
-- **Mapping-Tabelle erweiterbar:** `parameter_mappings` in DB, nicht hardcoded
-- **Hackathon-Scope:** Kein LAURIS, keine medizinische Freigabelogik
+- **Azure Vision als primäre Extraktionsmethode** – PDF wird als Bild an das Vision Model geschickt, kein pdfplumber als Hauptweg
+- **Menschliche Freigabe Pflicht** – kein Befund ohne `approved`-Status in der Ansicht
+- **Korrekturen nachvollziehbar** – `is_corrected`, `corrected_by`, `corrected_at` in `lab_results`
+- **Confidence-Feld** – Vision Model markiert unsichere Felder, Frontend hebt sie hervor
+- **Originalname immer speichern** – `original_name` bleibt neben `canonical_name` erhalten
+- **Referenzbereich robust** – `ref_text` immer befüllen, `ref_min`/`ref_max` nur wenn sicher parsebar
+- **Mapping-Tabelle erweiterbar** – `parameter_mappings` in DB, nicht hardcoded
 
 ---
 
