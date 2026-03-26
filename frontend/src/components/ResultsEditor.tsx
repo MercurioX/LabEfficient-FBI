@@ -1,4 +1,5 @@
 import {
+  Alert,
   Box,
   Chip,
   Paper,
@@ -9,6 +10,7 @@ import {
   TableHead,
   TableRow,
   TextField,
+  Tooltip,
   Typography,
 } from '@mui/material'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
@@ -78,6 +80,21 @@ function DeviationChip({ result }: { result: LabResult }) {
   return <Chip label="normal" color="success" size="small" />
 }
 
+function ConfidenceChip({ confidence }: { confidence: 'high' | 'low' }) {
+  if (confidence === 'low') {
+    return (
+      <Tooltip title="Die KI war bei diesem Wert unsicher. Bitte manuell prüfen.">
+        <Chip label="unsicher" color="warning" size="small" variant="outlined" />
+      </Tooltip>
+    )
+  }
+  return (
+    <Tooltip title="Die KI hat diesen Wert mit hoher Sicherheit erkannt.">
+      <Chip label="sicher" color="success" size="small" variant="outlined" />
+    </Tooltip>
+  )
+}
+
 export function ResultsEditor({ lab }: { lab: Lab }) {
   const queryClient = useQueryClient()
 
@@ -87,9 +104,20 @@ export function ResultsEditor({ lab }: { lab: Lab }) {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['lab', lab.id] }),
   })
 
+  const lowConfidenceCount = lab.results.filter(r => r.confidence === 'low').length
+
   return (
     <Box p={2}>
       <PatientHeader patient={lab.patient} />
+
+      {lowConfidenceCount > 0 && (
+        <Alert severity="warning" sx={{ mb: 2 }}>
+          <strong>{lowConfidenceCount} Wert{lowConfidenceCount > 1 ? 'e' : ''}</strong> wurden von
+          der KI mit geringer Sicherheit erkannt und sind gelb markiert. Bitte vor der Freigabe
+          manuell prüfen.
+        </Alert>
+      )}
+
       <TableContainer component={Paper}>
         <Table size="small" stickyHeader>
           <TableHead>
@@ -98,7 +126,8 @@ export function ResultsEditor({ lab }: { lab: Lab }) {
               <TableCell>Wert</TableCell>
               <TableCell>Einheit</TableCell>
               <TableCell>Ref.</TableCell>
-              <TableCell>Status</TableCell>
+              <TableCell>Abweichung</TableCell>
+              <TableCell>KI-Sicherheit</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -108,9 +137,15 @@ export function ResultsEditor({ lab }: { lab: Lab }) {
               .map((result) => (
                 <TableRow
                   key={result.id}
-                  sx={{ bgcolor: result.confidence === 'low' ? 'secondary.light' : 'inherit' }}
+                  sx={{
+                    bgcolor: result.confidence === 'low'
+                      ? 'warning.light'
+                      : 'inherit',
+                  }}
                 >
-                  <TableCell>{result.canonical_name ?? result.original_name}</TableCell>
+                  <TableCell sx={{ fontWeight: result.confidence === 'low' ? 600 : 400 }}>
+                    {result.canonical_name ?? result.original_name}
+                  </TableCell>
                   <EditableCell
                     value={result.value_numeric}
                     onChange={(v) =>
@@ -131,6 +166,9 @@ export function ResultsEditor({ lab }: { lab: Lab }) {
                   </TableCell>
                   <TableCell>
                     <DeviationChip result={result} />
+                  </TableCell>
+                  <TableCell>
+                    <ConfidenceChip confidence={result.confidence} />
                   </TableCell>
                 </TableRow>
               ))}
