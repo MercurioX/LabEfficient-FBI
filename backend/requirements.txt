@@ -1,1 +1,10 @@
-# Dependencies will be added in S02
+fastapi
+uvicorn[standard]
+sqlalchemy
+alembic
+pydantic
+pydantic-settings
+pymupdf
+openai
+python-multipart
+aiofiles

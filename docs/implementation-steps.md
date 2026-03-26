@@ -74,9 +74,10 @@ python -m uvicorn app.main:app --host 0.0.0.0 --port 8000
 
 ---
 
-### S02 – FastAPI Skeleton + Konfiguration
+### S02 – FastAPI Skeleton + Konfiguration ✅
 
-**Dateien:** `backend/requirements.txt`, `backend/app/main.py`, `backend/app/core/config.py`
+**Status:** Implementiert (2026-03-26)
+**Dateien:** `backend/requirements.txt`, `backend/app/__init__.py`, `backend/app/main.py`, `backend/app/core/__init__.py`, `backend/app/core/config.py`
 
 ```
 # requirements.txt

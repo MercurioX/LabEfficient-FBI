@@ -68,7 +68,7 @@
 ## Nächste Schritte
 
 1. ~~Docker Compose aufsetzen (frontend + backend)~~ ✅ (2026-03-26)
-2. FastAPI + React Grundgerüst erzeugen
+2. ~~FastAPI + React Grundgerüst erzeugen~~ ✅ (2026-03-26, Backend-Teil)
 3. SQLite-Schema mit Alembic anlegen (`import_batches`, `labs`, `lab_results`, `parameter_mappings`)
 4. Import-Endpoint + Folder-Scan implementieren
 5. PDF-zu-Bild-Rendering (PyMuPDF) + Mock-Azure-Call
