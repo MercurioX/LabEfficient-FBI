@@ -149,8 +149,9 @@ def get_db():
 
 ---
 
-### S04 – Models: ImportBatch + Patient
+### S04 – Models: ImportBatch + Patient ✅
 
+**Status:** Implementiert (2026-03-26)
 **Dateien:** `backend/app/models/import_batch.py`, `backend/app/models/patient.py`
 
 ```python
