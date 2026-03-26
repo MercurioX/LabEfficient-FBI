@@ -1469,7 +1469,9 @@ In `main.py` einbinden: `app.include_router(patients_router, prefix="/api/patien
 
 ---
 
-### S32 – Patientensuche: Frontend
+### S32 – Patientensuche: Frontend ✅
+
+**Status:** Implementiert (2026-03-26)
 
 **Dateien:**
 - `frontend/src/types/index.ts` — `PatientSummary`-Interface ergänzen

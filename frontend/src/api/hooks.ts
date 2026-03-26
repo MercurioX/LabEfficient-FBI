@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
 import { api } from './client'
-import type { ImportBatch, Lab } from '../types'
+import type { ImportBatch, Lab, PatientLabSummary, PatientSummary } from '../types'
 
 export const useLabs = (status?: string) =>
   useQuery<Lab[]>({
@@ -47,6 +47,20 @@ export const useRejectLab = () => {
     },
   })
 }
+
+export const usePatientSearch = (q: string) =>
+  useQuery<PatientSummary[]>({
+    queryKey: ['patients', q],
+    enabled: q.trim().length >= 2,
+    queryFn: () => api.get('/api/patients/search', { params: { q } }).then(r => r.data),
+  })
+
+export const usePatientLabs = (patientId: number | null) =>
+  useQuery<PatientLabSummary[]>({
+    queryKey: ['patientLabs', patientId],
+    enabled: patientId !== null,
+    queryFn: () => api.get(`/api/patients/${patientId}/labs`).then(r => r.data),
+  })
 
 export const usePatchResult = (labId: number) => {
   const qc = useQueryClient()

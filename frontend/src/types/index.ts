@@ -38,6 +38,21 @@ export interface Lab {
   results: LabResult[]
 }
 
+export interface PatientSummary {
+  id: number
+  first_name: string
+  last_name: string
+  birth_date: string | null
+}
+
+export interface PatientLabSummary {
+  id: number
+  upload_filename: string
+  status: string
+  sample_date: string | null
+  external_lab_name: string | null
+}
+
 export interface ImportBatch {
   batch_id: number
   status: string

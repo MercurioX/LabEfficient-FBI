@@ -6,6 +6,7 @@ import { BrowserRouter, Route, Routes } from 'react-router-dom'
 import { BefundDetailPage } from './pages/BefundDetailPage'
 import { BefundListPage } from './pages/BefundListPage'
 import { ImportPage } from './pages/ImportPage'
+import { PatientSearchPage } from './pages/PatientSearchPage'
 import { ReviewQueuePage } from './pages/ReviewQueuePage'
 import { SplitViewPage } from './pages/SplitViewPage'
 
@@ -21,6 +22,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
           <Route path="/review/:labId"  element={<SplitViewPage />} />
           <Route path="/befunde"        element={<BefundListPage />} />
           <Route path="/befunde/:labId" element={<BefundDetailPage />} />
+          <Route path="/patienten"      element={<PatientSearchPage />} />
         </Routes>
       </BrowserRouter>
     </QueryClientProvider>
