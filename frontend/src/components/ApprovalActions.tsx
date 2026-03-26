@@ -30,7 +30,7 @@ export function ApprovalActions({ labId }: { labId: number }) {
       bottom={0}
       bgcolor="background.paper"
       p={2}
-      borderTop="1px solid #e0e0e0"
+      sx={{ borderTop: '1px solid', borderColor: 'divider', boxShadow: '0 -2px 8px rgba(0,0,0,0.06)' }}
     >
       <Button
         variant="contained"

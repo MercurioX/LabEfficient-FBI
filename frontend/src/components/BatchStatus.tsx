@@ -1,8 +1,9 @@
 import {
   Alert,
   Box,
+  Card,
+  CardContent,
   Chip,
-  CircularProgress,
   LinearProgress,
   List,
   ListItem,
@@ -37,34 +38,47 @@ export function BatchStatus({ batchId }: { batchId: number }) {
     }
   }, [batch?.status, navigate])
 
-  if (!batch) return <CircularProgress sx={{ mt: 2 }} />
+  if (!batch) return null
+
+  const progress = batch.total > 0 ? (batch.processed / batch.total) * 100 : 0
 
   return (
-    <Box mt={2}>
-      {batch.status === 'partial_failure' && (
-        <Alert severity="warning" sx={{ mb: 1 }}>
-          Import abgeschlossen mit {batch.failed} Fehlern. Fehlerhafte Befunde sind unten markiert.
-        </Alert>
-      )}
-      <LinearProgress
-        variant="determinate"
-        value={batch.total > 0 ? (batch.processed / batch.total) * 100 : 0}
-        sx={{ mb: 1 }}
-      />
-      <Typography>
-        {batch.processed} / {batch.total} verarbeitet
-        {batch.failed > 0 && ` | ${batch.failed} Fehler`}
-      </Typography>
-      {batch.labs && (
-        <List dense>
-          {batch.labs.map((lab) => (
-            <ListItem key={lab.id}>
-              <ListItemText primary={lab.filename} />
-              <StatusChip status={lab.status} />
-            </ListItem>
-          ))}
-        </List>
-      )}
-    </Box>
+    <Card>
+      <CardContent sx={{ p: 3 }}>
+        <Typography variant="subtitle1" gutterBottom>Importstatus</Typography>
+
+        {batch.status === 'partial_failure' && (
+          <Alert severity="warning" sx={{ mb: 2 }}>
+            Import abgeschlossen mit {batch.failed} Fehlern.
+          </Alert>
+        )}
+
+        <Box mb={1}>
+          <LinearProgress variant="determinate" value={progress} />
+        </Box>
+        <Typography variant="body2" color="text.secondary" mb={2}>
+          {batch.processed} / {batch.total} verarbeitet
+          {batch.failed > 0 && ` · ${batch.failed} Fehler`}
+        </Typography>
+
+        {batch.labs && (
+          <List dense disablePadding>
+            {batch.labs.map((lab) => (
+              <ListItem
+                key={lab.id}
+                disableGutters
+                sx={{ borderBottom: '1px solid', borderColor: 'divider', py: 0.75 }}
+              >
+                <ListItemText
+                  primary={lab.filename}
+                  primaryTypographyProps={{ variant: 'body2' }}
+                />
+                <StatusChip status={lab.status} />
+              </ListItem>
+            ))}
+          </List>
+        )}
+      </CardContent>
+    </Card>
   )
 }

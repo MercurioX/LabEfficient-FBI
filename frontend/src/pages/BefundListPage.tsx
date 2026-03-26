@@ -15,34 +15,37 @@ import {
 import { useNavigate } from 'react-router-dom'
 
 import { useLabs } from '../api/hooks'
+import { PageContainer } from '../components/PageContainer'
 import type { Lab } from '../types'
 
 export function BefundListPage() {
   const { data: labs = [], isLoading, isError } = useLabs('approved')
   const navigate = useNavigate()
 
-  if (isLoading) return <Box p={3}><CircularProgress /></Box>
-  if (isError) return <Box p={3}><Alert severity="error">Fehler beim Laden der Befunde.</Alert></Box>
-
   return (
-    <Box p={3}>
-      <Typography variant="h5">Freigegebene Befunde ({labs.length})</Typography>
-      {labs.length === 0 ? (
-        <Typography color="text.secondary" mt={2}>Keine freigegebenen Befunde vorhanden.</Typography>
-      ) : (
-        <TableContainer component={Paper} sx={{ mt: 2 }}>
+    <PageContainer title={`Freigegebene Befunde${!isLoading ? ` (${labs.length})` : ''}`}>
+      {isLoading && <Box display="flex" justifyContent="center" py={6}><CircularProgress /></Box>}
+      {isError && <Alert severity="error">Fehler beim Laden der Befunde.</Alert>}
+      {!isLoading && !isError && labs.length === 0 && (
+        <Box textAlign="center" py={8}>
+          <Typography color="text.secondary">Keine freigegebenen Befunde vorhanden.</Typography>
+        </Box>
+      )}
+      {!isLoading && labs.length > 0 && (
+        <TableContainer component={Paper}>
           <Table>
             <TableHead>
               <TableRow>
                 <TableCell>Patient</TableCell>
                 <TableCell>Entnahmedatum</TableCell>
                 <TableCell>Labor</TableCell>
-                <TableCell />
+                <TableCell align="right" />
               </TableRow>
             </TableHead>
             <TableBody>
               {labs.map((lab: Lab) => (
-                <TableRow key={lab.id}>
+                <TableRow key={lab.id} hover sx={{ cursor: 'pointer' }}
+                  onClick={() => navigate(`/befunde/${lab.id}`)}>
                   <TableCell>
                     {lab.patient
                       ? `${lab.patient.last_name}, ${lab.patient.first_name}`
@@ -50,10 +53,8 @@ export function BefundListPage() {
                   </TableCell>
                   <TableCell>{lab.sample_date ?? '–'}</TableCell>
                   <TableCell>{lab.external_lab_name ?? '–'}</TableCell>
-                  <TableCell>
-                    <Button size="small" onClick={() => navigate(`/befunde/${lab.id}`)}>
-                      Öffnen
-                    </Button>
+                  <TableCell align="right">
+                    <Button size="small" variant="outlined">Öffnen</Button>
                   </TableCell>
                 </TableRow>
               ))}
@@ -61,6 +62,6 @@ export function BefundListPage() {
           </Table>
         </TableContainer>
       )}
-    </Box>
+    </PageContainer>
   )
 }

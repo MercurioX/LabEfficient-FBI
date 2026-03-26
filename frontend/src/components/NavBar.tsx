@@ -1,4 +1,4 @@
-import { AppBar, Button, Toolbar, Typography } from '@mui/material'
+import { AppBar, Box, Container, Toolbar, Typography } from '@mui/material'
 import { Link as RouterLink, useLocation } from 'react-router-dom'
 
 const NAV_ITEMS = [
@@ -17,25 +17,41 @@ export function NavBar() {
       : location.pathname.startsWith(path)
 
   return (
-    <AppBar position="static" color="primary">
-      <Toolbar>
-        <Typography variant="h6" sx={{ mr: 4 }}>LabEfficient</Typography>
-        {NAV_ITEMS.map(item => (
-          <Button
-            key={item.path}
+    <AppBar position="sticky" color="primary" elevation={0}>
+      <Container maxWidth="xl">
+        <Toolbar disableGutters sx={{ gap: 1 }}>
+          <Typography
+            variant="h6"
             component={RouterLink}
-            to={item.path}
-            color="inherit"
-            sx={{
-              fontWeight: isActive(item.path) ? 'bold' : 'normal',
-              borderBottom: isActive(item.path) ? '2px solid white' : '2px solid transparent',
-              borderRadius: 0,
-            }}
+            to="/"
+            sx={{ color: 'inherit', textDecoration: 'none', mr: 4, letterSpacing: 0.5 }}
           >
-            {item.label}
-          </Button>
-        ))}
-      </Toolbar>
+            Lab<Box component="span" sx={{ fontWeight: 400 }}>Efficient</Box>
+          </Typography>
+
+          {NAV_ITEMS.map(item => (
+            <Box
+              key={item.path}
+              component={RouterLink}
+              to={item.path}
+              sx={{
+                px: 1.5,
+                py: 0.75,
+                borderRadius: 1,
+                color: 'inherit',
+                textDecoration: 'none',
+                fontSize: '0.875rem',
+                fontWeight: isActive(item.path) ? 700 : 500,
+                bgcolor: isActive(item.path) ? 'rgba(255,255,255,0.18)' : 'transparent',
+                '&:hover': { bgcolor: 'rgba(255,255,255,0.12)' },
+                transition: 'background-color 0.2s',
+              }}
+            >
+              {item.label}
+            </Box>
+          ))}
+        </Toolbar>
+      </Container>
     </AppBar>
   )
 }

@@ -1747,7 +1747,9 @@ Akutbestimmungen: Laktat = Lactat; Troponin = Troponin I = Troponin T; BNP = NT-
 
 ---
 
-### S35 – Theming: Systhemis Design System
+### S35 – Theming: Systhemis Design System ✅
+
+**Status:** Implementiert (2026-03-26)
 
 **Ziel:** Das Frontend optisch an [systhemis.de](https://systhemis.de/) anlehnen.
 

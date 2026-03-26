@@ -20,12 +20,21 @@ import type { Lab, LabResult, Patient } from '../types'
 function PatientHeader({ patient }: { patient: Patient | null }) {
   if (!patient) return null
   return (
-    <Box mb={1}>
+    <Box
+      sx={{
+        bgcolor: 'primary.main',
+        color: 'primary.contrastText',
+        px: 3,
+        py: 2,
+        borderRadius: 1,
+        mb: 2,
+      }}
+    >
       <Typography variant="h6">
         {patient.last_name}, {patient.first_name}
       </Typography>
       {patient.birth_date && (
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="body2" sx={{ opacity: 0.85 }}>
           geb. {patient.birth_date}
         </Typography>
       )}
@@ -79,10 +88,10 @@ export function ResultsEditor({ lab }: { lab: Lab }) {
   })
 
   return (
-    <>
+    <Box p={2}>
       <PatientHeader patient={lab.patient} />
-      <TableContainer component={Paper} sx={{ mt: 2 }}>
-        <Table size="small">
+      <TableContainer component={Paper}>
+        <Table size="small" stickyHeader>
           <TableHead>
             <TableRow>
               <TableCell>Bezeichnung</TableCell>
@@ -99,7 +108,7 @@ export function ResultsEditor({ lab }: { lab: Lab }) {
               .map((result) => (
                 <TableRow
                   key={result.id}
-                  sx={{ bgcolor: result.confidence === 'low' ? 'warning.light' : 'inherit' }}
+                  sx={{ bgcolor: result.confidence === 'low' ? 'secondary.light' : 'inherit' }}
                 >
                   <TableCell>{result.canonical_name ?? result.original_name}</TableCell>
                   <EditableCell
@@ -117,7 +126,7 @@ export function ResultsEditor({ lab }: { lab: Lab }) {
                       patchMutation.mutate({ resultId: result.id, patch: { unit: v } })
                     }
                   />
-                  <TableCell>
+                  <TableCell sx={{ color: 'text.secondary' }}>
                     {result.ref_text ?? `${result.ref_min ?? '?'}–${result.ref_max ?? '?'}`}
                   </TableCell>
                   <TableCell>
@@ -128,6 +137,6 @@ export function ResultsEditor({ lab }: { lab: Lab }) {
           </TableBody>
         </Table>
       </TableContainer>
-    </>
+    </Box>
   )
 }
