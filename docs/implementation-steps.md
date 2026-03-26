@@ -26,9 +26,10 @@ sobald die API-Verträge (Request/Response-Schemas) aus `docs/api.md` bekannt si
 
 ---
 
-### S01 – Ordnerstruktur & Docker Compose
+### S01 – Ordnerstruktur & Docker Compose ✅
 
-**Dateien:** `docker-compose.yml`, `.env`, `data/inbox/.gitkeep`
+**Status:** Implementiert (2026-03-26)
+**Dateien:** `docker-compose.yml`, `.env`, `.gitignore`, `data/inbox/.gitkeep`, `backend/Dockerfile`, `backend/entrypoint.sh`, `backend/requirements.txt` (Platzhalter), `frontend/Dockerfile`, `frontend/package.json` (Platzhalter)
 
 ```yaml
 # docker-compose.yml
