@@ -45,6 +45,22 @@ MAPPINGS = [
     ("MCH",                 "MCH",                 "Hämatologie",      "pg"),
     ("MCHC",                "MCHC",                "Hämatologie",      "g/dl"),
     ("Thrombozyten",        "Thrombozyten",        "Hämatologie",      "/nl"),
+    # Gerinnung
+    ("INR",                           "INR",   "Gerinnung", ""),
+    ("International Normalized Ratio","INR",   "Gerinnung", ""),
+    ("Quick",                         "Quick", "Gerinnung", "%"),
+    ("Quick-Wert",                    "Quick", "Gerinnung", "%"),
+    ("PTT",                           "PTT",   "Gerinnung", "s"),
+    ("Partielle Thromboplastinzeit",  "PTT",   "Gerinnung", "s"),
+    # Akutbestimmungen – Aliase
+    ("Lactat",     "Laktat",   "Akutbestimmungen", "mmol/l"),
+    ("Troponin I", "Troponin", "Akutbestimmungen", "ng/l"),
+    ("Troponin T", "Troponin", "Akutbestimmungen", "ng/l"),
+    ("NT-proBNP",  "BNP",      "Akutbestimmungen", "pg/ml"),
+    # Akutbestimmungen – Selbst-Mappings
+    ("Laktat",   "Laktat",   "Akutbestimmungen", "mmol/l"),
+    ("Troponin", "Troponin", "Akutbestimmungen", "ng/l"),
+    ("BNP",      "BNP",      "Akutbestimmungen", "pg/ml"),
 ]
 
 

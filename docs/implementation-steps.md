@@ -1690,7 +1690,9 @@ export function NavBar() {
 
 ---
 
-### S34 – Parametergruppen: Gerinnung + Akutbestimmungen
+### S34 – Parametergruppen: Gerinnung + Akutbestimmungen ✅
+
+**Status:** Implementiert (2026-03-26)
 
 **Problem:** Die Kategorien `Gerinnung` (INR, Quick, PTT) und `Akutbestimmungen` (Laktat, Troponin, BNP) sind in den Anforderungen definiert, aber in Seed-Daten, Mapping-Service und Vision-Prompt nicht hinterlegt. Parameter dieser Gruppen werden von Azure Vision erkannt, aber nicht kanonisch gemappt.
 
@@ -1742,3 +1744,117 @@ Akutbestimmungen: Laktat = Lactat; Troponin = Troponin I = Troponin T; BNP = NT-
 **Prüfung:**
 - `SELECT canonical_name, count(*) FROM parameter_mappings GROUP BY canonical_name` → INR, Quick, PTT, Laktat, Troponin, BNP vorhanden
 - PDF mit Gerinnungsparametern importieren → korrekte Kategorisierung in `Gerinnung`
+
+---
+
+### S35 – Theming: Systhemis Design System
+
+**Ziel:** Das Frontend optisch an [systhemis.de](https://systhemis.de/) anlehnen.
+
+**Design-Tokens von systhemis.de:**
+| Token | Wert |
+|---|---|
+| Primary | `#2EA3F2` (helles Blau) |
+| Secondary | `#333333` (Dunkelgrau/Charcoal) |
+| Accent | `#974DF3` (Violett – für Highlights, z.B. `confidence='low'`) |
+| Background | `#F5F7FA` (helles Grau) |
+| Surface (Cards) | `#FFFFFF` |
+| Text primary | `#333333` |
+| Text secondary | `#666666` |
+| Font family | `Open Sans`, Arial, sans-serif |
+| Border radius | `4px` (Cards/Buttons leicht gerundet) |
+| Shadows | subtil: `0 1px 4px rgba(0,0,0,0.10)` |
+
+**Dateien:**
+- `frontend/index.html` — Google Fonts: Open Sans einbinden
+- `frontend/src/theme.ts` — MUI-Theme definieren (neu)
+- `frontend/src/main.tsx` — `ThemeProvider` + `CssBaseline` einbinden
+- `frontend/src/components/NavBar.tsx` — Hintergrundfarbe anpassen
+
+#### index.html – Open Sans laden
+
+```html
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap"
+      rel="stylesheet" />
+```
+
+#### theme.ts (neu)
+
+```typescript
+import { createTheme } from '@mui/material/styles'
+
+export const theme = createTheme({
+  palette: {
+    primary:    { main: '#2EA3F2', contrastText: '#fff' },
+    secondary:  { main: '#974DF3', contrastText: '#fff' },
+    background: { default: '#F5F7FA', paper: '#FFFFFF' },
+    text:       { primary: '#333333', secondary: '#666666' },
+  },
+  typography: {
+    fontFamily: '"Open Sans", Arial, sans-serif',
+    h5:  { fontWeight: 700 },
+    h6:  { fontWeight: 700 },
+    subtitle1: { fontWeight: 600 },
+  },
+  shape: {
+    borderRadius: 4,
+  },
+  components: {
+    MuiPaper: {
+      styleOverrides: {
+        root: { boxShadow: '0 1px 4px rgba(0,0,0,0.10)' },
+      },
+    },
+    MuiButton: {
+      styleOverrides: {
+        root: { textTransform: 'none', fontWeight: 600 },
+      },
+    },
+    MuiTableHead: {
+      styleOverrides: {
+        root: {
+          '& .MuiTableCell-head': {
+            backgroundColor: '#F5F7FA',
+            fontWeight: 600,
+            color: '#333333',
+          },
+        },
+      },
+    },
+    MuiChip: {
+      styleOverrides: {
+        root: { fontWeight: 600 },
+      },
+    },
+  },
+})
+```
+
+#### main.tsx – ThemeProvider einbinden
+
+```typescript
+import { ThemeProvider, CssBaseline } from '@mui/material'
+import { theme } from './theme'
+
+// <QueryClientProvider> um <ThemeProvider> + <CssBaseline> erweitern:
+<ThemeProvider theme={theme}>
+  <CssBaseline />
+  <BrowserRouter>
+    ...
+  </BrowserRouter>
+</ThemeProvider>
+```
+
+#### NavBar.tsx – Hintergrund anpassen
+
+Den `confidence='low'`-Hintergrund in `ResultsEditor.tsx` von `warning.light` auf `secondary.light`
+ändern, damit der Akzent-Violett zum Systhemis-Design passt:
+
+```typescript
+// ResultsEditor.tsx – TableRow bgcolor
+sx={{ bgcolor: result.confidence === 'low' ? 'secondary.light' : 'inherit' }}
+```
+
+**Prüfung:** App neu laden → Open Sans als Schriftart sichtbar, NavBar in `#2EA3F2`, Buttons ohne Großbuchstaben, Cards mit subtilen Schatten, Tabellen-Header in `#F5F7FA`.

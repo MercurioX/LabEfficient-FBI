@@ -11,6 +11,8 @@ Mappe Synonyme auf Standardnamen:
 AST/ASAT→GOT | ALT/ALAT→GPT | Gamma-GT/γ-GT→GGT
 CK/CPK/Kreatinkinase→CK gesamt | BILG/Bilirubin gesamt→Gesamt-Bilirubin
 WBC→Leukozyten | RBC→Erythrozyten | Hb→Hämoglobin | Hkt→Hämatokrit | Thrombos→Thrombozyten
+INR/International Normalized Ratio→INR | Quick-Wert→Quick | PTT/Partielle Thromboplastinzeit→PTT
+Lactat→Laktat | Troponin I/Troponin T→Troponin | NT-proBNP→BNP
 
 Antworte immer mit folgendem JSON-Schema:
 {

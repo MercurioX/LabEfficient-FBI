@@ -10,6 +10,10 @@ DISPLAY_ORDER = {
     "CK gesamt": 9, "Amylase": 10, "Lipase": 11, "C-reaktives Protein": 12,
     "Leukozyten": 20, "Erythrozyten": 21, "Hämoglobin": 22,
     "Hämatokrit": 23, "MCV": 24, "MCH": 25, "MCHC": 26, "Thrombozyten": 27,
+    # Gerinnung
+    "INR": 30, "Quick": 31, "PTT": 32,
+    # Akutbestimmungen
+    "Laktat": 40, "Troponin": 41, "BNP": 42,
 }
 
 
