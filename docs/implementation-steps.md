@@ -949,9 +949,10 @@ def process_single(lab_id: int, background_tasks: BackgroundTasks,
 
 ---
 
-### S20 – Vite Setup + Router + API-Client
+### S20 – Vite Setup + Router + API-Client ✅
 
-**Dateien:** `frontend/` (neu), `frontend/src/api/client.ts`, `frontend/src/main.tsx`
+**Status:** Implementiert (2026-03-26)
+**Dateien:** `frontend/package.json`, `frontend/vite.config.ts`, `frontend/tsconfig.json`, `frontend/tsconfig.node.json`, `frontend/index.html`, `frontend/src/main.tsx`, `frontend/src/api/client.ts`, `frontend/src/pages/*` (Stubs)
 
 ```bash
 npm create vite@latest frontend -- --template react-ts
