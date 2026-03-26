@@ -1279,7 +1279,9 @@ export function ResultsEditor({ lab }: { lab: Lab }) {
 
 ---
 
-### S27 – Split-View: ApprovalActions
+### S27 – Split-View: ApprovalActions ✅
+
+**Status:** Implementiert (2026-03-26)
 
 **Datei:** `frontend/src/components/ApprovalActions.tsx`
 
