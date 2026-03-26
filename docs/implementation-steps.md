@@ -741,9 +741,10 @@ Aufruf in `processing_service.process_lab` nach dem Speichern der Rohergebnisse.
 
 ---
 
-### S17 – Deviation Service: Normabweichung berechnen
+### S17 – Deviation Service: Normabweichung berechnen ✅
 
-**Datei:** `backend/app/services/deviation_service.py`
+**Status:** Implementiert (2026-03-26)
+**Dateien:** `backend/app/services/deviation_service.py`, `backend/app/services/processing_service.py` (calculate-Aufruf ergänzt)
 
 ```python
 from app.models import LabResult

@@ -7,7 +7,7 @@ from app.models.lab import Lab
 from app.models.lab_result import LabResult
 from app.models.patient import Patient
 from app.schemas.extraction import PatientData
-from app.services import mapping_service, pdf_service, vision_service
+from app.services import deviation_service, mapping_service, pdf_service, vision_service
 
 
 def process_lab(db: Session, lab_id: int) -> None:
@@ -49,6 +49,7 @@ def process_lab(db: Session, lab_id: int) -> None:
             db.add(lab_result)
             db.flush()  # lab_result.id verfügbar
             mapping_service.enrich_result(db, lab_result)
+            deviation_service.calculate(lab_result)
 
         lab.processing_status = "pending_review"
 
