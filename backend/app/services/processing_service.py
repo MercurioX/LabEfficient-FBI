@@ -7,7 +7,7 @@ from app.models.lab import Lab
 from app.models.lab_result import LabResult
 from app.models.patient import Patient
 from app.schemas.extraction import PatientData
-from app.services import pdf_service, vision_service
+from app.services import mapping_service, pdf_service, vision_service
 
 
 def process_lab(db: Session, lab_id: int) -> None:
@@ -33,9 +33,9 @@ def process_lab(db: Session, lab_id: int) -> None:
         lab.external_lab_name = extraction.patient.external_lab_name
         lab.sample_date = _parse_date(extraction.patient.sample_date)
 
-        # LabResults speichern
+        # LabResults speichern und anreichern
         for r in extraction.results:
-            db.add(LabResult(
+            lab_result = LabResult(
                 lab_id=lab.id,
                 original_name=r.original_name,
                 canonical_name=r.canonical_name,
@@ -45,7 +45,10 @@ def process_lab(db: Session, lab_id: int) -> None:
                 ref_min=r.reference_min,
                 ref_max=r.reference_max,
                 confidence=r.confidence,
-            ))
+            )
+            db.add(lab_result)
+            db.flush()  # lab_result.id verfügbar
+            mapping_service.enrich_result(db, lab_result)
 
         lab.processing_status = "pending_review"
 

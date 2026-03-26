@@ -703,9 +703,10 @@ def process_batch(batch_id: int) -> None:
 
 ---
 
-### S16 – Mapping Service: Synonym-Lookup
+### S16 – Mapping Service: Synonym-Lookup ✅
 
-**Datei:** `backend/app/services/mapping_service.py`
+**Status:** Implementiert (2026-03-26)
+**Dateien:** `backend/app/services/mapping_service.py`, `backend/app/services/processing_service.py` (enrich_result-Aufruf ergänzt)
 
 ```python
 from sqlalchemy import func
