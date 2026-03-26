@@ -884,8 +884,9 @@ def _build_timeline(labs: list[Lab]) -> list[dict]:
 
 ---
 
-### S19 – Labs Router: Korrektur + Freigabe
+### S19 – Labs Router: Korrektur + Freigabe ✅
 
+**Status:** Implementiert (2026-03-26)
 **Datei:** `backend/app/api/labs_router.py` (Ergänzung)
 
 ```python
