@@ -984,8 +984,9 @@ export const api = axios.create({
 
 ---
 
-### S21 – Typen + API-Hooks
+### S21 – Typen + API-Hooks ✅
 
+**Status:** Implementiert (2026-03-26)
 **Dateien:** `frontend/src/types/index.ts`, `frontend/src/api/hooks.ts`
 
 ```typescript
