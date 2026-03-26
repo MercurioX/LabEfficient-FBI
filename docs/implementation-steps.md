@@ -1359,7 +1359,9 @@ const statusLabel = (r: LabResult) => {
 
 ---
 
-### S29 – Verlaufsgrafik
+### S29 – Verlaufsgrafik ✅
+
+**Status:** Implementiert (2026-03-26)
 
 **Datei:** `frontend/src/components/TimelineChart.tsx`
 

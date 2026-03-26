@@ -1,6 +1,7 @@
 import {
   Box,
   Chip,
+  Collapse,
   Paper,
   Table,
   TableBody,
@@ -10,9 +11,11 @@ import {
   TableRow,
   Typography,
 } from '@mui/material'
+import { useState } from 'react'
 import { useParams } from 'react-router-dom'
 
 import { useLab } from '../api/hooks'
+import { TimelineChart } from '../components/TimelineChart'
 import type { LabResult } from '../types'
 
 const statusColor = (r: LabResult): 'default' | 'error' | 'info' | 'success' => {
@@ -32,6 +35,7 @@ const statusLabel = (r: LabResult): string => {
 export function BefundDetailPage() {
   const { labId } = useParams()
   const { data: lab } = useLab(Number(labId))
+  const [selectedParam, setSelectedParam] = useState<string | null>(null)
 
   if (!lab) return null
 
@@ -41,6 +45,10 @@ export function BefundDetailPage() {
     acc[cat].push(r)
     return acc
   }, {})
+
+  const handleParamClick = (name: string | null) => {
+    setSelectedParam(prev => (prev === name ? null : name))
+  }
 
   return (
     <Box p={3}>
@@ -57,6 +65,15 @@ export function BefundDetailPage() {
       <Typography variant="body2" color="text.secondary" gutterBottom>
         Entnahmedatum: {lab.sample_date ?? '–'} · Labor: {lab.external_lab_name ?? '–'}
       </Typography>
+
+      {selectedParam && (
+        <Box mt={2} mb={1}>
+          <Typography variant="subtitle2" gutterBottom>
+            Verlauf: {selectedParam}
+          </Typography>
+          <TimelineChart labId={lab.id} paramName={selectedParam} />
+        </Box>
+      )}
 
       {Object.entries(byCategory).map(([category, results]) => (
         <Box key={category} mt={3}>
@@ -79,22 +96,31 @@ export function BefundDetailPage() {
                 {results
                   .slice()
                   .sort((a, b) => (a.display_order ?? 999) - (b.display_order ?? 999))
-                  .map((r) => (
-                    <TableRow key={r.id}>
-                      <TableCell>{r.canonical_name ?? '–'}</TableCell>
-                      <TableCell>{r.original_name}</TableCell>
-                      <TableCell>{r.value_numeric ?? '–'}</TableCell>
-                      <TableCell>{r.unit ?? '–'}</TableCell>
-                      <TableCell>
-                        {r.ref_text ?? (r.ref_min != null || r.ref_max != null
-                          ? `${r.ref_min ?? '?'}–${r.ref_max ?? '?'}`
-                          : '–')}
-                      </TableCell>
-                      <TableCell>
-                        <Chip label={statusLabel(r)} color={statusColor(r)} size="small" />
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                  .map((r) => {
+                    const paramName = r.canonical_name ?? r.original_name
+                    return (
+                      <TableRow
+                        key={r.id}
+                        hover
+                        sx={{ cursor: 'pointer' }}
+                        onClick={() => handleParamClick(paramName)}
+                        selected={selectedParam === paramName}
+                      >
+                        <TableCell>{r.canonical_name ?? '–'}</TableCell>
+                        <TableCell>{r.original_name}</TableCell>
+                        <TableCell>{r.value_numeric ?? '–'}</TableCell>
+                        <TableCell>{r.unit ?? '–'}</TableCell>
+                        <TableCell>
+                          {r.ref_text ?? (r.ref_min != null || r.ref_max != null
+                            ? `${r.ref_min ?? '?'}–${r.ref_max ?? '?'}`
+                            : '–')}
+                        </TableCell>
+                        <TableCell>
+                          <Chip label={statusLabel(r)} color={statusColor(r)} size="small" />
+                        </TableCell>
+                      </TableRow>
+                    )
+                  })}
               </TableBody>
             </Table>
           </TableContainer>
