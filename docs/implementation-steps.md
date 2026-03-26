@@ -584,8 +584,9 @@ def extract_from_image(base64_image: str) -> ExtractionResult:
 
 ---
 
-### S14 – Processing Service: Orchestration
+### S14 – Processing Service: Orchestration ✅
 
+**Status:** Implementiert (2026-03-26)
 **Datei:** `backend/app/services/processing_service.py`
 
 ```python
