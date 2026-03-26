@@ -1618,7 +1618,9 @@ export function PatientSearchPage() {
 
 ---
 
-### S33 – App-Navigation (NavBar + Layout)
+### S33 – App-Navigation (NavBar + Layout) ✅
+
+**Status:** Implementiert (2026-03-26)
 
 **Problem:** Die App hat aktuell keine Navigation zwischen den Seiten. Nutzer können nur über die URL-Leiste wechseln.
 

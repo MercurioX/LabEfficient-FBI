@@ -10,7 +10,7 @@ export function SplitViewPage() {
   const { data: lab } = useLab(Number(labId))
 
   return (
-    <Box display="grid" gridTemplateColumns="1fr 1fr" height="100vh" overflow="hidden">
+    <Box display="grid" gridTemplateColumns="1fr 1fr" height="calc(100vh - 64px)" overflow="hidden">
       <Box borderRight="1px solid #e0e0e0" overflow="auto" bgcolor="#f5f5f5">
         <PdfViewer labId={Number(labId)} />
       </Box>

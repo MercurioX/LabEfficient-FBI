@@ -3,6 +3,7 @@ import React from 'react'
 import ReactDOM from 'react-dom/client'
 import { BrowserRouter, Route, Routes } from 'react-router-dom'
 
+import { NavBar } from './components/NavBar'
 import { BefundDetailPage } from './pages/BefundDetailPage'
 import { BefundListPage } from './pages/BefundListPage'
 import { ImportPage } from './pages/ImportPage'
@@ -16,6 +17,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
+        <NavBar />
         <Routes>
           <Route path="/"               element={<ImportPage />} />
           <Route path="/review"         element={<ReviewQueuePage />} />
