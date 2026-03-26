@@ -1180,7 +1180,9 @@ export function ReviewQueuePage() {
 
 ---
 
-### S25 – Split-View: Layout + PDF-Viewer
+### S25 – Split-View: Layout + PDF-Viewer ✅
+
+**Status:** Implementiert (2026-03-26)
 
 **Dateien:** `frontend/src/pages/SplitViewPage.tsx`, `frontend/src/components/PdfViewer.tsx`
 
