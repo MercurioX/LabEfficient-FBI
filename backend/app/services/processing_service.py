@@ -35,6 +35,11 @@ def process_lab(db: Session, lab_id: int) -> None:
 
         # LabResults speichern und anreichern
         for r in extraction.results:
+            # Safeguard: fehlender Wert bedeutet immer low confidence
+            confidence = r.confidence
+            if r.value is None:
+                confidence = "low"
+
             lab_result = LabResult(
                 lab_id=lab.id,
                 original_name=r.original_name,
@@ -44,7 +49,7 @@ def process_lab(db: Session, lab_id: int) -> None:
                 ref_text=r.reference_range_text,
                 ref_min=r.reference_min,
                 ref_max=r.reference_max,
-                confidence=r.confidence,
+                confidence=confidence,
             )
             db.add(lab_result)
             db.flush()  # lab_result.id verfügbar
