@@ -1,4 +1,5 @@
 import ArrowBackIcon from '@mui/icons-material/ArrowBack'
+import TimelineIcon from '@mui/icons-material/Timeline'
 import {
   Box,
   Button,
@@ -76,7 +77,7 @@ export function BefundDetailPage() {
                 ? `${lab.patient.last_name}, ${lab.patient.first_name}`
                 : lab.upload_filename}
             </Typography>
-            <Box display="flex" gap={3} flexWrap="wrap">
+            <Box display="flex" gap={3} flexWrap="wrap" alignItems="center">
               {lab.patient?.birth_date && (
                 <Typography variant="body2" color="text.secondary">
                   Geburtsdatum: <strong>{lab.patient.birth_date}</strong>
@@ -88,6 +89,17 @@ export function BefundDetailPage() {
               <Typography variant="body2" color="text.secondary">
                 Labor: <strong>{lab.external_lab_name ?? '–'}</strong>
               </Typography>
+              {lab.patient && (
+                <Button
+                  variant="outlined"
+                  size="small"
+                  startIcon={<TimelineIcon />}
+                  onClick={() => navigate(`/patienten/${lab.patient!.id}/verlauf`)}
+                  sx={{ ml: 'auto' }}
+                >
+                  Verlaufsansicht
+                </Button>
+              )}
             </Box>
           </CardContent>
         </Card>

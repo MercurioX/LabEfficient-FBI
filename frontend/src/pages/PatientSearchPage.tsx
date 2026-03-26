@@ -1,3 +1,4 @@
+import TimelineIcon from '@mui/icons-material/Timeline'
 import {
   Box,
   Button,
@@ -5,6 +6,7 @@ import {
   CardContent,
   CircularProgress,
   Divider,
+  IconButton,
   InputAdornment,
   List,
   ListItemButton,
@@ -17,6 +19,7 @@ import {
   TableHead,
   TableRow,
   TextField,
+  Tooltip,
   Typography,
 } from '@mui/material'
 import { useState } from 'react'
@@ -72,6 +75,17 @@ export function PatientSearchPage() {
                         primary={`${p.last_name}, ${p.first_name}`}
                         secondary={p.birth_date ? `geb. ${p.birth_date}` : undefined}
                       />
+                      <Tooltip title="Verlaufsansicht">
+                        <IconButton
+                          size="small"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            navigate(`/patienten/${p.id}/verlauf`)
+                          }}
+                        >
+                          <TimelineIcon fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
                     </ListItemButton>
                   ))}
                 </List>

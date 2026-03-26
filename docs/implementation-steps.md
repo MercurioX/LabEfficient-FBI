@@ -1860,3 +1860,243 @@ sx={{ bgcolor: result.confidence === 'low' ? 'secondary.light' : 'inherit' }}
 ```
 
 **Prüfung:** App neu laden → Open Sans als Schriftart sichtbar, NavBar in `#2EA3F2`, Buttons ohne Großbuchstaben, Cards mit subtilen Schatten, Tabellen-Header in `#F5F7FA`.
+
+---
+
+## S36 – Patienten-Verlaufsansicht (Matrix-Tabelle)
+
+**Status:** [x] implementiert
+
+**Ziel:** Für einen Patienten kann eine Verlaufsansicht aufgerufen werden, die alle gemessenen Laborwerte in einer Matrix darstellt – Zeilen = Parameter, Spalten = Befunde (nach Datum sortiert). Jede Zelle zeigt Wert + Referenzbereich; Abweichungen werden farblich hervorgehoben.
+
+---
+
+### Backend
+
+Kein neuer Endpunkt nötig. Die Verlaufsansicht kombiniert vorhandene Endpunkte:
+- `GET /api/patients/{id}/labs` — liefert alle `approved` Befunde des Patienten (Sample-Datum, Lab-ID)
+- `GET /api/labs/{id}` — liefert die `results` eines Befunds (canonical_name, value_numeric, unit, ref_text, ref_min, ref_max, is_high, is_low)
+
+Beide Endpunkte sind bereits implementiert (S31).
+
+---
+
+### Frontend
+
+#### Neuer Hook `usePatientTimeline(patientId)`
+
+`frontend/src/api/hooks.ts` – neuen Hook ergänzen:
+
+```typescript
+export function usePatientTimeline(patientId: number | null) {
+  const { data: labs } = usePatientLabs(patientId)
+
+  const labQueries = useQueries({
+    queries: (labs ?? []).map((lab) => ({
+      queryKey: ['lab', lab.id],
+      queryFn: () => api.get<Lab>(`/api/labs/${lab.id}`),
+      enabled: patientId !== null,
+    })),
+  })
+
+  const loadedLabs = labQueries
+    .filter((q) => q.isSuccess && q.data)
+    .map((q) => q.data as Lab)
+    .sort((a, b) => (b.sample_date ?? '').localeCompare(a.sample_date ?? ''))  // neu → alt
+
+  return { labs: loadedLabs, isLoading: labQueries.some((q) => q.isLoading) }
+}
+```
+
+#### Neue Seite `PatientTimelinePage.tsx`
+
+`frontend/src/pages/PatientTimelinePage.tsx`:
+
+```typescript
+import ArrowBackIcon from '@mui/icons-material/ArrowBack'
+import {
+  Box, Button, Chip, Container, Paper,
+  Skeleton, Table, TableBody, TableCell,
+  TableContainer, TableHead, TableRow, Typography,
+} from '@mui/material'
+import { useNavigate, useParams } from 'react-router-dom'
+
+import { usePatientTimeline } from '../api/hooks'
+import { PageContainer } from '../components/PageContainer'
+import type { Lab, LabResult } from '../types'
+
+function buildMatrix(labs: Lab[]): {
+  params: string[]
+  byParam: Record<string, Record<number, LabResult>>
+} {
+  const paramSet = new Set<string>()
+  const byParam: Record<string, Record<number, LabResult>> = {}
+
+  for (const lab of labs) {
+    for (const r of lab.results) {
+      const key = r.canonical_name ?? r.original_name
+      paramSet.add(key)
+      if (!byParam[key]) byParam[key] = {}
+      byParam[key][lab.id] = r
+    }
+  }
+
+  return { params: Array.from(paramSet).sort(), byParam }
+}
+
+function ValueCell({ result }: { result: LabResult | undefined }) {
+  const isAbnormal = result && (result.is_high || result.is_low)
+  const refLabel = result?.ref_text
+    ?? (result?.ref_min != null || result?.ref_max != null
+      ? `${result.ref_min ?? '?'}–${result.ref_max ?? '?'}`
+      : null)
+
+  return (
+    <TableCell
+      align="center"
+      sx={{
+        bgcolor: isAbnormal
+          ? result!.is_high ? 'error.light' : 'info.light'
+          : 'inherit',
+        transition: 'background-color 0.2s',
+      }}
+    >
+      {!result || result.value_numeric == null ? (
+        <Typography variant="body2" color="text.disabled">–</Typography>
+      ) : (
+        <Box>
+          <Typography variant="body2" fontWeight={isAbnormal ? 700 : 400}>
+            {result.value_numeric} {result.unit ?? ''}
+          </Typography>
+          {refLabel && (
+            <Typography variant="caption" display="block" color="text.secondary">
+              Ref: {refLabel}
+            </Typography>
+          )}
+        </Box>
+      )}
+    </TableCell>
+  )
+}
+
+export function PatientTimelinePage() {
+  const { patientId } = useParams()
+  const navigate = useNavigate()
+  const { labs, isLoading } = usePatientTimeline(patientId ? Number(patientId) : null)
+
+  const { params, byParam } = buildMatrix(labs)
+
+  return (
+    <PageContainer title="Verlaufsansicht">
+      <Button
+        startIcon={<ArrowBackIcon />}
+        onClick={() => navigate(-1)}
+        sx={{ mb: 2, color: 'text.secondary' }}
+      >
+        Zurück
+      </Button>
+
+      {isLoading && <Skeleton variant="rectangular" height={300} />}
+
+      {!isLoading && labs.length === 0 && (
+        <Typography color="text.secondary">Keine freigegebenen Befunde gefunden.</Typography>
+      )}
+
+      {!isLoading && labs.length > 0 && (
+        <TableContainer component={Paper} sx={{ overflowX: 'auto' }}>
+          <Table size="small" stickyHeader>
+            <TableHead>
+              <TableRow>
+                <TableCell sx={{ minWidth: 160, fontWeight: 700 }}>Parameter</TableCell>
+                {labs.map((lab) => (
+                  <TableCell key={lab.id} align="center" sx={{ minWidth: 140 }}>
+                    <Typography variant="body2" fontWeight={600}>
+                      {lab.sample_date ?? '–'}
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      {lab.external_lab_name ?? ''}
+                    </Typography>
+                  </TableCell>
+                ))}
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {params.map((param) => (
+                <TableRow key={param} hover>
+                  <TableCell sx={{ fontWeight: 500 }}>{param}</TableCell>
+                  {labs.map((lab) => (
+                    <ValueCell key={lab.id} result={byParam[param]?.[lab.id]} />
+                  ))}
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      )}
+    </PageContainer>
+  )
+}
+```
+
+#### Route ergänzen
+
+`frontend/src/main.tsx`:
+
+```typescript
+import { PatientTimelinePage } from './pages/PatientTimelinePage'
+
+// In <Routes>:
+<Route path="/patienten/:patientId/verlauf" element={<PatientTimelinePage />} />
+```
+
+#### Einstiegspunkt: PatientSearchPage
+
+In `frontend/src/pages/PatientSearchPage.tsx` bei der Patienten-Ergebnisliste einen "Verlauf"-Button pro Patient ergänzen:
+
+```typescript
+import { useNavigate } from 'react-router-dom'
+import TimelineIcon from '@mui/icons-material/Timeline'
+
+// Im ListItemButton neben dem Patientennamen:
+<IconButton
+  size="small"
+  onClick={(e) => {
+    e.stopPropagation()
+    navigate(`/patienten/${patient.id}/verlauf`)
+  }}
+>
+  <TimelineIcon fontSize="small" />
+</IconButton>
+```
+
+#### Einstiegspunkt: BefundDetailPage
+
+In `frontend/src/pages/BefundDetailPage.tsx` einen "Verlauf"-Button im Patient-Info-Card ergänzen (nur wenn `lab.patient` vorhanden):
+
+```typescript
+<Button
+  variant="outlined"
+  size="small"
+  startIcon={<TimelineIcon />}
+  onClick={() => navigate(`/patienten/${lab.patient!.id}/verlauf`)}
+  sx={{ ml: 'auto' }}
+>
+  Verlaufsansicht
+</Button>
+```
+
+---
+
+### Typen
+
+`frontend/src/types/index.ts` – kein neuer Typ nötig; `Lab` und `LabResult` reichen.
+
+---
+
+### Prüfung
+
+1. Patient mit mehreren freigegebenen Befunden öffnen → "Verlaufsansicht" anklicken
+2. Matrix erscheint: Spalten = Befundtermine (chronologisch), Zeilen = alle Parameter
+3. Zellen zeigen Wert + Einheit als Chip (grün/rot/blau je nach Abweichung) + Referenzbereich darunter
+4. Fehlende Werte (Parameter nicht in jedem Befund) → `–`
+5. Responsive: horizontales Scrollen bei vielen Spalten

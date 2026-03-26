@@ -9,6 +9,7 @@ import { BefundDetailPage } from './pages/BefundDetailPage'
 import { BefundListPage } from './pages/BefundListPage'
 import { ImportPage } from './pages/ImportPage'
 import { PatientSearchPage } from './pages/PatientSearchPage'
+import { PatientTimelinePage } from './pages/PatientTimelinePage'
 import { ReviewQueuePage } from './pages/ReviewQueuePage'
 import { SplitViewPage } from './pages/SplitViewPage'
 import { theme } from './theme'
@@ -29,6 +30,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
             <Route path="/befunde"        element={<BefundListPage />} />
             <Route path="/befunde/:labId" element={<BefundDetailPage />} />
             <Route path="/patienten"      element={<PatientSearchPage />} />
+            <Route path="/patienten/:patientId/verlauf" element={<PatientTimelinePage />} />
           </Routes>
         </BrowserRouter>
       </QueryClientProvider>

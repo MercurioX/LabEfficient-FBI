@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query'
 
 import { api } from './client'
 import type { ImportBatch, Lab, PatientLabSummary, PatientSummary } from '../types'
@@ -61,6 +61,25 @@ export const usePatientLabs = (patientId: number | null) =>
     enabled: patientId !== null,
     queryFn: () => api.get(`/api/patients/${patientId}/labs`).then(r => r.data),
   })
+
+export function usePatientTimeline(patientId: number | null) {
+  const { data: labSummaries } = usePatientLabs(patientId)
+
+  const labQueries = useQueries({
+    queries: (labSummaries ?? []).map((lab) => ({
+      queryKey: ['lab', lab.id] as const,
+      queryFn: () => api.get<Lab>(`/api/labs/${lab.id}`).then(r => r.data),
+      enabled: patientId !== null,
+    })),
+  })
+
+  const loadedLabs = labQueries
+    .filter((q) => q.isSuccess && q.data != null)
+    .map((q) => q.data as Lab)
+    .sort((a, b) => (b.sample_date ?? '').localeCompare(a.sample_date ?? ''))
+
+  return { labs: loadedLabs, isLoading: labQueries.some((q) => q.isLoading) }
+}
 
 export const usePatchResult = (labId: number) => {
   const qc = useQueryClient()
