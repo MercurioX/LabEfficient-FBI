@@ -19,7 +19,7 @@ import { useRef } from 'react'
 import { api } from '../api/client'
 import type { Lab, LabResult, Patient } from '../types'
 
-function PatientHeader({ patient }: { patient: Patient | null }) {
+function PatientHeader({ patient, lab }: { patient: Patient | null; lab: Lab }) {
   if (!patient) return null
   return (
     <Box
@@ -35,11 +35,17 @@ function PatientHeader({ patient }: { patient: Patient | null }) {
       <Typography variant="h6">
         {patient.last_name}, {patient.first_name}
       </Typography>
-      {patient.birth_date && (
-        <Typography variant="body2" sx={{ opacity: 0.85 }}>
-          geb. {patient.birth_date}
-        </Typography>
-      )}
+      <Box display="flex" gap={3} flexWrap="wrap" sx={{ opacity: 0.85, mt: 0.5 }}>
+        {patient.birth_date && (
+          <Typography variant="body2">geb. {patient.birth_date}</Typography>
+        )}
+        {lab.sample_date && (
+          <Typography variant="body2">Entnahme: {lab.sample_date}</Typography>
+        )}
+        {lab.external_lab_name && (
+          <Typography variant="body2">Labor: {lab.external_lab_name}</Typography>
+        )}
+      </Box>
     </Box>
   )
 }
@@ -108,7 +114,7 @@ export function ResultsEditor({ lab }: { lab: Lab }) {
 
   return (
     <Box p={2}>
-      <PatientHeader patient={lab.patient} />
+      <PatientHeader patient={lab.patient} lab={lab} />
 
       {lowConfidenceCount > 0 && (
         <Alert severity="warning" sx={{ mb: 2 }}>

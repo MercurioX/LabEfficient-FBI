@@ -49,9 +49,18 @@ export function ReviewQueuePage() {
                   onClick={() => navigate(`/review/${lab.id}`)}>
                   <TableCell>{lab.upload_filename}</TableCell>
                   <TableCell>
-                    {lab.patient
-                      ? `${lab.patient.last_name}, ${lab.patient.first_name}`
-                      : '–'}
+                    {lab.patient ? (
+                      <>
+                        <Typography variant="body2">
+                          {lab.patient.last_name}, {lab.patient.first_name}
+                        </Typography>
+                        {lab.patient.birth_date && (
+                          <Typography variant="caption" color="text.secondary">
+                            geb. {lab.patient.birth_date}
+                          </Typography>
+                        )}
+                      </>
+                    ) : '–'}
                   </TableCell>
                   <TableCell>{lab.sample_date ?? '–'}</TableCell>
                   <TableCell>{lab.external_lab_name ?? '–'}</TableCell>
