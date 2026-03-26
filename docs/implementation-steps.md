@@ -538,8 +538,9 @@ class ExtractionResult(BaseModel):
 
 ---
 
-### S13 – Vision Service: Azure Call
+### S13 – Vision Service: Azure Call ✅
 
+**Status:** Implementiert (2026-03-26)
 **Datei:** `backend/app/services/vision_service.py`
 
 ```python
