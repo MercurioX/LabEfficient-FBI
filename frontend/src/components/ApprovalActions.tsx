@@ -9,7 +9,7 @@ export function ApprovalActions({ labId }: { labId: number }) {
   const queryClient = useQueryClient()
 
   const approve = useMutation({
-    mutationFn: () => api.post(`/api/labs/${labId}/approve`),
+    mutationFn: () => api.post(`/api/labs/${labId}/approve`, {}),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['labs'] })
       navigate('/review')

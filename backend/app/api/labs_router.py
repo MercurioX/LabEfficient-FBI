@@ -49,9 +49,12 @@ def get_lab(lab_id: int, db: Session = Depends(get_db)):
 
 @router.get("/{lab_id}/pdf")
 def get_pdf(lab_id: int, db: Session = Depends(get_db)):
+    import os
     lab = db.get(Lab, lab_id)
     if not lab:
         raise HTTPException(status_code=404, detail="Lab not found")
+    if not lab.source_pdf_path or not os.path.exists(lab.source_pdf_path):
+        raise HTTPException(status_code=404, detail="PDF not found")
     return FileResponse(
         lab.source_pdf_path,
         media_type="application/pdf",

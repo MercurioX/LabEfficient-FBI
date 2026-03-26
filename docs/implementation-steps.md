@@ -1397,28 +1397,30 @@ export function TimelineChart({ labId, paramName }: { labId: number, paramName: 
 
 ---
 
-### S30 – Demo-Härtung
+### S30 – Demo-Härtung ✅
+
+**Status:** Implementiert (2026-03-26)
 
 **Checkliste:**
 
 ```
 Backend:
-[ ] 3 Test-PDFs in data/inbox/ bereitstellen (unterschiedliche Labore/Strukturen)
-[ ] failed-Status in Batch-Response sauber exponiert
-[ ] Fehlende source_pdf_path → 404 statt 500 im PDF-Endpoint
-[ ] CORS für localhost:5173 explizit konfiguriert
+[~] 3 Test-PDFs in data/inbox/ bereitstellen – 1 PDF vorhanden (L1-final.pdf), .gitkeep committed
+[x] failed-Status in Batch-Response sauber exponiert – bereits in import_router.py
+[x] Fehlende source_pdf_path → 404 statt 500 im PDF-Endpoint – labs_router.py gefixt
+[x] CORS für localhost:5173 explizit konfiguriert – main.py
 
 Frontend:
-[ ] Ladezustand: CircularProgress in allen useQuery-Hooks
-[ ] Leerzustand: "Keine Befunde" wenn Liste leer
-[ ] Fehler-Banner bei fehlgeschlagenem API-Call (React Query onError)
-[ ] PDF-Viewer Fallback wenn PDF nicht ladbar
+[x] Ladezustand: CircularProgress in ReviewQueuePage + BefundListPage
+[x] Leerzustand: "Keine Befunde" wenn Liste leer – beide Listenseiten
+[x] Fehler-Banner bei fehlgeschlagenem API-Call – Alert in ReviewQueuePage + BefundListPage
+[x] PDF-Viewer Fallback wenn PDF nicht ladbar – PdfViewer.tsx
 
 DevOps:
-[ ] docker compose up startet alles ohne manuelle Schritte
-[ ] Alembic + Seed laufen im Backend-Container automatisch beim Start
-[ ] .env.example mit Platzhalterwerten committen
-[ ] data/inbox/.gitkeep committen, data/labefficient.db in .gitignore
+[x] docker compose up startet alles ohne manuelle Schritte – entrypoint.sh
+[x] Alembic + Seed laufen im Backend-Container automatisch beim Start
+[x] .env.example mit Platzhalterwerten committed
+[x] data/inbox/.gitkeep committed, data/labefficient.db in .gitignore (*.db)
 ```
 
 **Prüfung:** Frischer `git clone` → `docker compose up` → kompletter Demo-Durchlauf funktioniert.
