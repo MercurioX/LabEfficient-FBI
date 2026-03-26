@@ -239,8 +239,9 @@ class LabResult(Base):
 
 ---
 
-### S06 – Models: ParameterMapping + ExtractionRun
+### S06 – Models: ParameterMapping + ExtractionRun ✅
 
+**Status:** Implementiert (2026-03-26)
 **Dateien:** `backend/app/models/parameter_mapping.py`, `backend/app/models/extraction_run.py`
 
 ```python
@@ -272,8 +273,9 @@ class ExtractionRun(Base):
 
 ---
 
-### S06b – Models `__init__.py` (Alembic-Voraussetzung)
+### S06b – Models `__init__.py` (Alembic-Voraussetzung) ✅
 
+**Status:** Implementiert (2026-03-26)
 **Datei:** `backend/app/models/__init__.py`
 
 ```python
