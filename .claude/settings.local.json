@@ -1,7 +1,8 @@
 {
   "permissions": {
     "allow": [
-      "WebFetch(domain:systhemis.de)"
+      "WebFetch(domain:systhemis.de)",
+      "Bash(python -c \":*)"
     ]
   }
 }

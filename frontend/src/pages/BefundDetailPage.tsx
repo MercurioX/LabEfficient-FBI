@@ -21,6 +21,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 
 import { useLab } from '../api/hooks'
 import { TimelineChart } from '../components/TimelineChart'
+import { PARAMETER_TEMPLATE, TEMPLATE_PARAM_SET } from '../constants/parameterTemplate'
 import type { LabResult } from '../types'
 
 const statusColor = (r: LabResult): 'default' | 'error' | 'info' | 'success' => {
@@ -45,12 +46,18 @@ export function BefundDetailPage() {
 
   if (!lab) return null
 
-  const byCategory = lab.results.reduce<Record<string, LabResult[]>>((acc, r) => {
-    const cat = r.category ?? 'Sonstige'
-    if (!acc[cat]) acc[cat] = []
-    acc[cat].push(r)
-    return acc
-  }, {})
+  // Lookup: canonical_name (oder original_name) → LabResult
+  const resultByParam = new Map<string, LabResult>()
+  for (const r of lab.results) {
+    const key = r.canonical_name ?? r.original_name
+    resultByParam.set(key, r)
+  }
+
+  // Ergebnisse, die nicht im Template sind → "Sonstige"
+  const extraResults = lab.results.filter(r => {
+    const key = r.canonical_name ?? r.original_name
+    return !TEMPLATE_PARAM_SET.has(key)
+  })
 
   const handleParamClick = (name: string | null) => {
     setSelectedParam(prev => (prev === name ? null : name))
@@ -60,7 +67,6 @@ export function BefundDetailPage() {
     <Box sx={{ bgcolor: 'background.default', minHeight: 'calc(100vh - 64px)', py: 4 }}>
       <Container maxWidth="xl">
 
-        {/* Back + Header */}
         <Button
           startIcon={<ArrowBackIcon />}
           onClick={() => navigate(-1)}
@@ -116,17 +122,17 @@ export function BefundDetailPage() {
           </Card>
         )}
 
-        {/* Parameter tables by category */}
-        {Object.entries(byCategory).map(([category, results], i) => (
-          <Box key={category} mt={i === 0 ? 0 : 3}>
+        {/* Template-gesteuerte Kategorietabellen */}
+        {PARAMETER_TEMPLATE.map((tmplCategory, i) => (
+          <Box key={tmplCategory.category} mt={i === 0 ? 0 : 3}>
             <Typography variant="subtitle1" sx={{ mb: 1.5, fontWeight: 700 }}>
-              {category}
+              {tmplCategory.category}
             </Typography>
             <TableContainer component={Paper}>
               <Table size="small">
                 <TableHead>
                   <TableRow>
-                    <TableCell>Standardname</TableCell>
+                    <TableCell>Parameter</TableCell>
                     <TableCell>Originalname</TableCell>
                     <TableCell>Wert</TableCell>
                     <TableCell>Einheit</TableCell>
@@ -135,7 +141,72 @@ export function BefundDetailPage() {
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {results
+                  {tmplCategory.params.map((paramName) => {
+                    const r = resultByParam.get(paramName)
+                    if (r) {
+                      return (
+                        <TableRow
+                          key={paramName}
+                          hover
+                          sx={{ cursor: 'pointer' }}
+                          onClick={() => handleParamClick(paramName)}
+                          selected={selectedParam === paramName}
+                        >
+                          <TableCell>{r.canonical_name ?? paramName}</TableCell>
+                          <TableCell sx={{ color: 'text.secondary' }}>{r.original_name}</TableCell>
+                          <TableCell><strong>{r.value_numeric ?? '–'}</strong></TableCell>
+                          <TableCell>{r.unit ?? '–'}</TableCell>
+                          <TableCell sx={{ color: 'text.secondary' }}>
+                            {r.ref_text ?? (r.ref_min != null || r.ref_max != null
+                              ? `${r.ref_min ?? '?'}–${r.ref_max ?? '?'}`
+                              : '–')}
+                          </TableCell>
+                          <TableCell>
+                            <Chip label={statusLabel(r)} color={statusColor(r)} size="small" />
+                          </TableCell>
+                        </TableRow>
+                      )
+                    }
+                    // Parameter nicht im Befund
+                    return (
+                      <TableRow key={paramName} sx={{ opacity: 0.45 }}>
+                        <TableCell>{paramName}</TableCell>
+                        <TableCell />
+                        <TableCell>–</TableCell>
+                        <TableCell />
+                        <TableCell />
+                        <TableCell>
+                          <Chip label="nicht gemessen" color="default" size="small" variant="outlined" />
+                        </TableCell>
+                      </TableRow>
+                    )
+                  })}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          </Box>
+        ))}
+
+        {/* Sonstige – Parameter außerhalb des Templates */}
+        {extraResults.length > 0 && (
+          <Box mt={3}>
+            <Typography variant="subtitle1" sx={{ mb: 1.5, fontWeight: 700 }}>
+              Sonstige
+            </Typography>
+            <TableContainer component={Paper}>
+              <Table size="small">
+                <TableHead>
+                  <TableRow>
+                    <TableCell>Parameter</TableCell>
+                    <TableCell>Originalname</TableCell>
+                    <TableCell>Wert</TableCell>
+                    <TableCell>Einheit</TableCell>
+                    <TableCell>Referenz</TableCell>
+                    <TableCell>Status</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {extraResults
                     .slice()
                     .sort((a, b) => (a.display_order ?? 999) - (b.display_order ?? 999))
                     .map((r) => {
@@ -167,7 +238,8 @@ export function BefundDetailPage() {
               </Table>
             </TableContainer>
           </Box>
-        ))}
+        )}
+
       </Container>
     </Box>
   )

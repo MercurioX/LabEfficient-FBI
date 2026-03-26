@@ -5,15 +5,25 @@ from app.models.lab_result import LabResult
 from app.models.parameter_mapping import ParameterMapping
 
 DISPLAY_ORDER = {
-    "Natrium": 1, "Kalium": 2, "Glucose": 3, "Creatinin": 4,
-    "Gesamt-Bilirubin": 5, "GOT": 6, "GPT": 7, "GGT": 8,
-    "CK gesamt": 9, "Amylase": 10, "Lipase": 11, "C-reaktives Protein": 12,
-    "Leukozyten": 20, "Erythrozyten": 21, "Hämoglobin": 22,
-    "Hämatokrit": 23, "MCV": 24, "MCH": 25, "MCHC": 26, "Thrombozyten": 27,
+    # Klinische Chemie
+    "Natrium": 1, "Kalium": 2, "Calcium": 3, "Magnesium": 4,
+    "Phosphat": 5, "Chlorid": 6, "Glucose": 7, "GFR (CKD-EPI)": 8,
+    "Creatinin": 9, "Harnstoff": 10, "Harnsäure": 11,
+    "Gesamt-Bilirubin": 12, "GOT": 13, "GPT": 14, "GLDH": 15, "GGT": 16,
+    "Alkalische Phosphatase": 17, "LDH": 18, "CK gesamt": 19,
+    "Amylase": 20, "Lipase": 21, "Eisen": 22, "Gesamteiweiß": 23, "Albumin": 24,
     # Gerinnung
     "INR": 30, "Quick": 31, "PTT": 32,
-    # Akutbestimmungen
-    "Laktat": 40, "Troponin": 41, "BNP": 42,
+    # Hämatologie
+    "Leukozyten": 40, "Erythrozyten": 41, "Hämoglobin": 42, "Hämatokrit": 43,
+    "MCV": 44, "MCH": 45, "MCHC": 46, "Thrombozyten": 47, "MPV": 48,
+    "% Normoblasten": 49, "Neutrophile": 50, "Lymphozyten": 51,
+    "Monozyten": 52, "Eosinophile": 53, "Basophile": 54,
+    "% Neutrophile": 55, "% Lymphozyten": 56, "% Monozyten": 57,
+    "% Eosinophile": 58, "% Basophile": 59,
+    "Unreife Granulozyten": 60, "% Unreife Granulozyten": 61,
+    # Akutbestimmungen / TDM / Drogen
+    "C-reaktives Protein": 70, "Laktat": 71, "Troponin": 72, "BNP": 73,
 }
 
 
