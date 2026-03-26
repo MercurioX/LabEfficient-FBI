@@ -428,9 +428,10 @@ def scan_and_create_batch(db, folder_path: str) -> ImportBatch:
 
 ---
 
-### S10 – Import Router
+### S10 – Import Router ✅
 
-**Datei:** `backend/app/api/import_router.py`
+**Status:** Implementiert (2026-03-26)
+**Dateien:** `backend/app/api/__init__.py`, `backend/app/api/import_router.py`, `backend/app/main.py` (Router eingebunden), `backend/app/services/import_service.py` (process_batch Stub ergänzt)
 
 ```python
 from fastapi import APIRouter, Depends, BackgroundTasks

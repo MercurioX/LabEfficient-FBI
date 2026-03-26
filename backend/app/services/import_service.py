@@ -28,3 +28,8 @@ def scan_and_create_batch(db: Session, folder_path: str) -> ImportBatch:
     db.commit()
     db.refresh(batch)
     return batch
+
+
+def process_batch(batch_id: int) -> None:
+    """Stub – wird in S11–S15 implementiert (Azure Vision Extraktion)."""
+    pass
