@@ -296,9 +296,10 @@ __all__ = ["ImportBatch", "Patient", "Lab", "LabResult", "ParameterMapping", "Ex
 
 ---
 
-### S07 – Alembic Migration
+### S07 – Alembic Migration ✅
 
-**Dateien:** `backend/alembic/`, `backend/alembic/env.py`
+**Status:** Implementiert (2026-03-26)
+**Dateien:** `backend/alembic.ini`, `backend/alembic/env.py`, `backend/alembic/script.py.mako`, `backend/alembic/versions/0001_initial_schema.py`
 
 ```bash
 cd backend
