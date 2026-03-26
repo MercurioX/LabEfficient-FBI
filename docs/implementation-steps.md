@@ -1613,3 +1613,128 @@ export function PatientSearchPage() {
 - Suchfeld mit ≥ 2 Zeichen → Trefferliste erscheint (Live-Suche, kein Button)
 - Patient auswählen → seine freigegebenen Befunde darunter
 - „Öffnen" navigiert zu `/befunde/:labId`
+
+---
+
+### S33 – App-Navigation (NavBar + Layout)
+
+**Problem:** Die App hat aktuell keine Navigation zwischen den Seiten. Nutzer können nur über die URL-Leiste wechseln.
+
+**Dateien:**
+- `frontend/src/components/NavBar.tsx` — neue Komponente
+- `frontend/src/main.tsx` — Layout-Wrapper um alle Routen
+
+#### NavBar.tsx
+
+```typescript
+const NAV_ITEMS = [
+  { label: 'Import',       path: '/' },
+  { label: 'Prüfung',      path: '/review' },
+  { label: 'Befunde',      path: '/befunde' },
+  { label: 'Patienten',    path: '/patienten' },
+]
+
+export function NavBar() {
+  const location = useLocation()
+
+  return (
+    <AppBar position="static" color="primary">
+      <Toolbar>
+        <Typography variant="h6" sx={{ mr: 4 }}>LabEfficient</Typography>
+        {NAV_ITEMS.map(item => (
+          <Button
+            key={item.path}
+            component={RouterLink}
+            to={item.path}
+            color="inherit"
+            sx={{ fontWeight: location.pathname === item.path ? 'bold' : 'normal',
+                  borderBottom: location.pathname.startsWith(item.path) && item.path !== '/'
+                    ? '2px solid white'
+                    : location.pathname === '/' && item.path === '/'
+                    ? '2px solid white'
+                    : 'none' }}
+          >
+            {item.label}
+          </Button>
+        ))}
+      </Toolbar>
+    </AppBar>
+  )
+}
+```
+
+#### main.tsx – Layout-Wrapper
+
+```typescript
+// Alle <Route>-Elemente in ein Layout-Fragment einbetten:
+<BrowserRouter>
+  <NavBar />
+  <Routes>
+    <Route path="/"               element={<ImportPage />} />
+    <Route path="/review"         element={<ReviewQueuePage />} />
+    <Route path="/review/:labId"  element={<SplitViewPage />} />
+    <Route path="/befunde"        element={<BefundListPage />} />
+    <Route path="/befunde/:labId" element={<BefundDetailPage />} />
+    <Route path="/patienten"      element={<PatientSearchPage />} />
+  </Routes>
+</BrowserRouter>
+```
+
+**Hinweis:** `SplitViewPage` nutzt `height: 100vh` — der NavBar reduziert den verfügbaren Platz. Die `SplitViewPage`-Box muss auf `height: calc(100vh - 64px)` angepasst werden.
+
+**Prüfung:** NavBar ist auf allen Seiten sichtbar, aktive Route ist hervorgehoben, Navigation zwischen allen Seiten funktioniert per Klick.
+
+---
+
+### S34 – Parametergruppen: Gerinnung + Akutbestimmungen
+
+**Problem:** Die Kategorien `Gerinnung` (INR, Quick, PTT) und `Akutbestimmungen` (Laktat, Troponin, BNP) sind in den Anforderungen definiert, aber in Seed-Daten, Mapping-Service und Vision-Prompt nicht hinterlegt. Parameter dieser Gruppen werden von Azure Vision erkannt, aber nicht kanonisch gemappt.
+
+**Dateien:**
+- `backend/app/core/seed.py` — neue Einträge in `PARAMETER_MAPPINGS`
+- `backend/app/services/mapping_service.py` — `DISPLAY_ORDER` erweitern
+- `backend/app/services/vision_service.py` — System-Prompt um Synonyme ergänzen
+
+#### seed.py – neue Mappings
+
+```python
+# Gerinnung
+{"alias": "INR",                  "canonical": "INR"},
+{"alias": "International Normalized Ratio", "canonical": "INR"},
+{"alias": "Quick",                "canonical": "Quick"},
+{"alias": "Quick-Wert",           "canonical": "Quick"},
+{"alias": "PTT",                  "canonical": "PTT"},
+{"alias": "Partielle Thromboplastinzeit", "canonical": "PTT"},
+
+# Akutbestimmungen
+{"alias": "Laktat",               "canonical": "Laktat"},
+{"alias": "Lactat",               "canonical": "Laktat"},
+{"alias": "Troponin",             "canonical": "Troponin"},
+{"alias": "Troponin I",           "canonical": "Troponin"},
+{"alias": "Troponin T",           "canonical": "Troponin"},
+{"alias": "BNP",                  "canonical": "BNP"},
+{"alias": "NT-proBNP",            "canonical": "BNP"},
+```
+
+#### mapping_service.py – DISPLAY_ORDER erweitern
+
+```python
+# Gerinnung (30–32)
+"INR":   30, "Quick": 31, "PTT": 32,
+
+# Akutbestimmungen (40–42)
+"Laktat": 40, "Troponin": 41, "BNP": 42,
+```
+
+#### vision_service.py – System-Prompt Synonyme ergänzen
+
+Im bestehenden SYSTEM_PROMPT den Synonym-Abschnitt um folgende Zeilen ergänzen:
+
+```
+Gerinnung: INR = International Normalized Ratio; Quick = Quick-Wert; PTT = Partielle Thromboplastinzeit
+Akutbestimmungen: Laktat = Lactat; Troponin = Troponin I = Troponin T; BNP = NT-proBNP
+```
+
+**Prüfung:**
+- `SELECT canonical_name, count(*) FROM parameter_mappings GROUP BY canonical_name` → INR, Quick, PTT, Laktat, Troponin, BNP vorhanden
+- PDF mit Gerinnungsparametern importieren → korrekte Kategorisierung in `Gerinnung`
