@@ -1405,7 +1405,7 @@ export function TimelineChart({ labId, paramName }: { labId: number, paramName: 
 
 ```
 Backend:
-[~] 3 Test-PDFs in data/inbox/ bereitstellen – 1 PDF vorhanden (L1-final.pdf), .gitkeep committed
+[x] 3 Test-PDFs in data/inbox/ bereitstellen – L1-final.pdf, L2-final.pdf, L3-final.pdf
 [x] failed-Status in Batch-Response sauber exponiert – bereits in import_router.py
 [x] Fehlende source_pdf_path → 404 statt 500 im PDF-Endpoint – labs_router.py gefixt
 [x] CORS für localhost:5173 explizit konfiguriert – main.py
