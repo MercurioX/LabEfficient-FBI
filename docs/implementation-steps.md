@@ -184,8 +184,9 @@ class Patient(Base):
 
 ---
 
-### S05 – Models: Lab + LabResult
+### S05 – Models: Lab + LabResult ✅
 
+**Status:** Implementiert (2026-03-26)
 **Dateien:** `backend/app/models/lab.py`, `backend/app/models/lab_result.py`
 
 ```python
