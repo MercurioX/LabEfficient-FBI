@@ -1323,7 +1323,9 @@ export function ApprovalActions({ labId }: { labId: number }) {
 
 ---
 
-### S28 – Befundliste + Befunddetail
+### S28 – Befundliste + Befunddetail ✅
+
+**Status:** Implementiert (2026-03-26)
 
 **Dateien:** `frontend/src/pages/BefundListPage.tsx`, `frontend/src/pages/BefundDetailPage.tsx`
 
