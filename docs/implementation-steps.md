@@ -1223,7 +1223,9 @@ export function PdfViewer({ labId }: { labId: number }) {
 
 ---
 
-### S26 – Split-View: ResultsEditor
+### S26 – Split-View: ResultsEditor ✅
+
+**Status:** Implementiert (2026-03-26)
 
 **Datei:** `frontend/src/components/ResultsEditor.tsx`
 

@@ -1,6 +1,7 @@
 import type { Lab } from '../types'
+import { ResultsEditor } from './ResultsEditor'
 
-// Platzhalter – wird in S26 (ResultsEditor) und S27 (ApprovalActions) implementiert
-export function ReviewPanel({ lab: _lab }: { lab: Lab }) {
-  return <div>ReviewPanel – S26/S27</div>
+// ApprovalActions wird in S27 ergänzt
+export function ReviewPanel({ lab }: { lab: Lab }) {
+  return <ResultsEditor lab={lab} />
 }
