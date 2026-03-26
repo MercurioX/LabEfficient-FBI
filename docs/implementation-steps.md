@@ -1080,7 +1080,9 @@ export function ImportPage() {
 
 ---
 
-### S23 – Import-Seite: Batch-Status + Statusliste
+### S23 – Import-Seite: Batch-Status + Statusliste ✅
+
+**Status:** Implementiert (2026-03-26)
 
 **Datei:** `frontend/src/components/BatchStatus.tsx`
 
@@ -1126,7 +1128,9 @@ export function BatchStatus({ batchId }: { batchId: number }) {
 
 ---
 
-### S24 – Review-Queue
+### S24 – Review-Queue ✅
+
+**Status:** Implementiert (2026-03-26)
 
 **Datei:** `frontend/src/pages/ReviewQueuePage.tsx`
 
